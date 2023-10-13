@@ -1,0 +1,21 @@
+
+(rule
+ (target scanner.ml)
+ (deps scanner.mll)
+ (action
+  (chdir
+   %{workspace_root}
+   (run %{bin:ocamllex} -q -o %{target} %{deps}))))
+
+(menhir
+  (modules parser))
+
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A))))
+
+(executable
+ (public_name alpaca)
+ (name alpaca)
+ (libraries alpaca))

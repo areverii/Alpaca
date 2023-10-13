@@ -1,0 +1,4 @@
+(library
+ (name alpaca)
+ (libraries llvm llvm.analysis))
+

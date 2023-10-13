@@ -1,0 +1,383 @@
+The MicroC compiler
+
+Coded in OCaml, this compiler takes a highly stripped-down subset of C (ints,
+bools, and void types, arithmetic, if-else, for, and while statements,
+and user-defined functions) and compiles it into LLVM IR.
+
+MicroC also provides two built-in functions: "print", which calls the C library
+function printf(), and "printbig," which prints large ASCII-encoded characters.
+
+MicroC needs the OCaml llvm library and the dune build system, both of which are
+most easily installed through opam.  Getting everything set up to install the
+compiler can be a bit tricky. In general, you will need to do the following:
+
+  1. Install LLVM and its development libraries.
+  2. Install the m4 macro preprocessor.
+  3. Install ocaml and opam.
+  4. Use opam to install the llvm library for OCaml. Note that the version of
+     the OCaml llvm library must match the version of the LLVM system installed
+     on your system. 
+  5. Use opam to install dune and menhir.
+
+See below for OS-specific installation instructions. If you have a Mac with an
+M1 or M2 chip, the macOS instructions may not work for you. In that case, follow
+the "Installation for macOS (ARM processors)" instructions.
+
+
+Once everything is installed, you can compile the compiler with `make`. 
+The stock C compiler compiles printbig.o.  testall.sh runs the MicroC
+executable on each testcase (.mc file) to produce a .ll file, invokes
+"llc" (the LLVM compiler) to produce a .s (assembly) file, then
+invokes "cc" (the stock C compiler) to assemble the .s file, link in
+printbig.o, and generate an executable.  See testall.sh for details.
+
+----------------------------
+
+General Installation Note and Compiler Error Debugging
+
+-- If you get compiler errors about llvm.analysis not being found, it's probably
+   because opam enviroment information is missing.  Try running
+
+    eval $(opam env)
+
+------------------------------
+
+Installation using Docker (this won't work on Macs with M1 or M2 chips)
+
+* Install Docker on whatever operating system you're on
+
+   Under Ubuntu,
+   apt install docker.io
+
+* Test your installation
+
+   docker run hello-world
+
+  If this fails, you will need to correct your installation.
+
+  Under Ubuntu, add yourself to the "docker" group:
+  
+   sudo usermod -aG docker <username>
+
+  You will need to logout and login again before this takes affect.
+
+* Move to where you unpacked the MicroC source:
+
+  cd microc
+
+* Invoke docker
+
+  docker run --rm -it -v `pwd`:/home/microc -w=/home/microc tuftsrtownsend/compilers
+
+* You are now sitting in the same directory in a new bash shell, but with all
+  the necessary packages/tools installed to work with MicroC. Now, you should be
+  able to compile MicroC and run the regression tests:
+
+  # make test
+  ...
+  test-add1...OK
+  test-arith1...OK
+  test-arith2...OK
+  test-arith3...OK
+  ... etc.
+
+  # make clean
+
+* To leave your docker container and return to your original shell, simply run
+
+  exit
+
+------------------------------
+Installation under Ubuntu 22.04
+
+First make sure all necessary packages are installed:
+
+sudo apt install ocaml llvm llvm-runtime m4 opam ocamlbuild
+
+Next, check what LLVM version you have (14.0 is the default on 22.04):
+
+which llc | xargs ls -la
+
+The output of the above command should give you a hint of the LLVM version you
+have. You must install a matching version of the OCaml LLVM bindings. Assuming
+you have version 14.0, run:
+
+opam init                #Agree to any prompts you get here.
+opam install ocamlfind
+opam install llvm.14.0.6 #This can take a while, and might require you to
+                         #install some more packages with `apt`.
+opam install dune
+opam install menhir
+
+Once that is done, you should be able to compile the compiler and run the
+testsuite:
+
+make
+./testall.sh
+
+------------------------------
+Installation under Ubuntu 20.04
+
+First make sure all necessary packages are installed:
+
+sudo apt install ocaml llvm llvm-runtime m4 opam ocamlbuild
+
+Next, check what LLVM version you have (10.0 is the default on 20.04):
+
+which llc | xargs ls -la
+
+The output of the above command should give you a hint of the LLVM version you
+have. You must install a matching version of the OCaml LLVM bindings. Assuming
+you have version 10.0, run:
+
+opam init                #Agree to any prompts you get here.
+opam install ocamlfind
+opam install llvm.10.0.0 #This can take a while, and might require you to
+                         #install some more packages with `apt`.
+eval $(opam config env)  #Put this line in your .bashrc so you don't have to run
+                         #it every time you open your terminal.
+
+Once that is done, you should be able to compile the compiler and run the
+testsuite:
+
+make
+./testall.sh
+
+------------------------------
+Installation under Ubuntu 18.04
+
+First make sure all necessary packages are installed:
+
+sudo apt install ocaml llvm llvm-runtime m4 opam ocamlbuild
+
+Next, check what LLVM version you have (6.0 is the default on 18.04):
+
+which llc | xargs ls -la
+
+The output of the above command should give you a hint of the LLVM version you
+have. You must install a matching version of the OCaml LLVM bindings. Assuming
+you have version 6.0, run:
+
+opam init                #Agree to any prompts you get here
+opam install llvm.6.0.0  #This can take a while
+eval $(opam config env)  #Put this line in your .bashrc so you don't have to run
+                         #it every time you open your terminal
+
+Once that is done, you should be able to compile the compiler and run the
+testsuite:
+
+make
+./testall.sh
+
+------------------------------
+Installation under Ubuntu 16.04
+
+LLVM 3.8 is the default under 16.04. Install the matching version of
+the OCaml LLVM bindings:
+
+sudo apt install ocaml llvm llvm-runtime m4 opam
+opam init
+opam install llvm.3.8
+eval `opam config env`
+
+make
+./testall.sh
+
+------------------------------
+Installation under Ubuntu 15.10
+
+LLVM 3.6 is the default under 15.10, so we ask for a matching version of the
+OCaml library.
+
+sudo apt-get install -y ocaml m4 llvm opam
+opam init
+opam install llvm.3.6 ocamlfind
+eval `opam config env`
+
+make
+./testall.sh
+
+------------------------------
+Installation under Ubuntu 14.04
+
+The default LLVM package is 3.4, so we install the matching OCaml
+library using opam.  The default version of opam under 14.04 is too
+old; we need to use a newer package.
+
+sudo apt-get install m4 llvm software-properties-common
+
+sudo add-apt-repository --yes ppa:avsm/ppa
+sudo apt-get update -qq
+sudo apt-get install -y opam
+opam init
+
+eval `opam config env`
+
+opam install llvm.3.4 ocamlfind
+
+------------------------------
+Installation under macOS (Intel processors)
+
+1. Install Homebrew:
+
+   ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+
+2. Verify Homebrew is installed correctly:
+
+   brew doctor
+
+3. Install opam:
+
+   brew install opam
+
+4. Set up opam:
+
+   opam init # Agree to any prompts you get here
+
+5. Install llvm:
+
+   brew install llvm
+
+   Take note of where brew places the llvm executables. It will show you the
+   path to them under the CAVEATS section of the post-install terminal output.
+   For me, they were in /usr/local/opt/llvm/bin, BUT IT'S HIGHLY LIKELY THIS
+   WILL BE A DIFFERENT PATH FOR YOU! Write it down to reference later in this
+   README. Also take note of the llvm version installed. For me, it was 3.6.2.
+
+6. Have opam set up your environment:
+
+   eval $(opam env)
+
+7. Install the OCaml llvm library:
+
+   opam install llvm.3.6 
+
+   Ensure that the version of llvm you install here matches the
+   version you installed via brew. Brew installed llvm version 3.6.2,
+   so I install llvm.3.6 with opam.
+
+   IF YOU HAVE PROBLEMS ON THIS STEP, it's probably because you are
+   missing some external dependencies. Ensure that libffi is installed
+   on your machine. It can be installed with
+
+   brew install libffi
+
+   If, after this, opam install llvm.3.6 is still not working, try
+   running
+
+   opam list --external --required-by=llvm.3.6
+
+   This will list all of the external dependencies required by
+   llvm.3.6. Install all the dependencies listed by this command.
+
+   IF THE PREVIOUS STEPS DO NOT SOLVE THE ISSUE, it may be a problem
+   with using your system's default version of llvm. Install a
+   different version of llvm and opam install llvm with that version
+   by running:
+
+   brew install homebrew/versions/llvm37
+   opam install llvm.3.7
+
+   Where the number at the end of both commands is a version different 
+   from the one your system currently has.
+
+8. Make sure testall.sh can access lli and llc
+
+   Create a symbolic link to the lli command (using the path from step 5):
+
+   sudo ln -s /usr/local/opt/llvm/bin/lli /usr/bin/lli
+
+   Create the symlink from wherever brew installs the llvm executables
+   and place it in your bin. From step 5, I know that brew installed
+   the lli executable in the folder, /usr/local/opt/llvm/bin/, so this
+   is where I symlink to. Brew might install the lli executables in a
+   different location for you, so make sure you symlink to the right
+   directory.
+
+   IF YOU GET OPERATION NOT PERMITTED ERROR, then this is probably a
+   result of OSX's System Integrity Protection. 
+
+   One way to get around this is to reboot your machine into recovery
+   mode (by holding cmd-r when restarting). Open a terminal from
+   recovery mode by going to Utilities -> Terminal, and enter the
+   following commands:
+
+   csrutil disable
+   reboot
+   
+   After your machine has restarted, try the `ln....` command again,
+   and it should succeed.
+
+   IMPORTANT: the prevous step disables System Integrity Protection,
+   which can leave your machine vulnerable. It's highly advisable to
+   reenable System Integrity Protection when you are done by 
+   rebooting your machine into recovery mode and entering the following
+   command in the terminal:
+
+   csrutil enable
+   reboot
+
+9. Install dune and menhir:
+
+   opam install dune
+   opam install menhir
+
+10. To run and test, navigate to the MicroC folder. Once there, run
+
+   make ; ./testall.sh
+
+   MicroC should build without any complaints and all tests should
+   pass.
+
+   IF RUNNING ./testall.sh FAILS ON SOME TESTS, check to make sure you
+   have symlinked the correct executable from your llvm installation.
+   For example, if the executable is named lli-[version], then the 
+   previous step should have looked something like:
+
+   sudo ln -s /usr/local/opt/llvm/bin/lli-3.7 /usr/bin/lli   
+
+   As before, you may also modify the path to lli in testall.sh
+
+------------------------------
+Installation for macOS (ARM processors)
+
+1. Download and Install the UTM virtual machine software, which you'll use to
+   install an Ubuntu virtual machine.
+
+   https://mac.getutm.app/
+
+2. Download the ARM desktop image for the Ubuntu OS. Note that this is a huge
+   file (3-4 Gb) and may take a while to download.
+
+   https://cdimage.ubuntu.com/jammy/daily-live/current/jammy-desktop-arm64.iso
+
+3. In UTM, set up a new Ubuntu virtual machine (VM):
+
+    - Click the '+' button
+    - Select "Virtualize"
+    - Select "Other" under "Custom"
+    - Browse to where the .iso file was downloaded in the last step
+    - You'll be asked to set specs for the VM; the defaults should be fine (~4GB
+      memory, ~64 GB hard drive space).
+
+4. Start up the VM you just created. Select "Try or Install
+   Ubuntu". From the boot menu, hit enter.
+
+5. You should now be in a "test" Ubuntu OS. On the desktop screen, there should
+   be an Ubuntu installer. Open it and go through the installer, sticking with
+   all default options.
+
+6. After installation, restart the VM. From now one, each time the VM starts up,
+   select "UEFI Firmware settings" from the boot menu, then select "Boot
+   Manager", and finally, "ubuntu". This will take you to the installed Ubuntu
+   (not just the trial version). 
+
+7. Follow the "Installation for Ubuntu 22.04" instructions above on your VM.
+
+
+------------------------------
+To run and test:
+
+$ make
+$ ./testall.sh
+
