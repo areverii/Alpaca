@@ -5,36 +5,55 @@ type token =
   | WHILE
   | VOID
   | TIMES
-  | SEMI
+  | SYSTEM
+  | STRING
+  | SPAWN
+  | SLIT of (string)
+  | SHIFTR
+  | SHIFTL
   | RPAREN
   | RETURN
-  | RBRACE
+  | RBRACKET
+  | QUERY
   | PLUS
   | OR
   | NOT
+  | NEWLINE
   | NEQ
+  | MOD
   | MINUS
   | LT
   | LPAREN
-  | LITERAL of (int)
   | LEQ
-  | LBRACE
+  | LBRACKET
   | INT
+  | IN
+  | ILIT of (int)
   | IF
   | ID of (string)
   | GT
   | GEQ
+  | FUNCTION
   | FOR
   | FLOAT
-  | FLIT of (string)
+  | FLIT of (float)
   | EQ
   | EOF
+  | ENTITY
+  | END
   | ELSE
+  | DOT
   | DIVIDE
+  | COMPONENT
   | COMMA
+  | COLON
   | BOOL
   | BLIT of (bool)
+  | BITXOR
+  | BITOR
+  | BITAND
   | ASSIGN
+  | AS
   | AND
 
 (* This exception is raised by the monolithic API functions. *)

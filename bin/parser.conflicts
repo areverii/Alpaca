@@ -1,0 +1,60 @@
+
+** Conflict (shift/reduce) in state 203.
+** Token involved: LBRACKET
+** This state is reached from program after reading:
+
+cdecl_list edecl_list sdecl_list fdecl_list FUNCTION typ ID LPAREN formals_opt RPAREN COLON NEWLINE vdecl_list
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+program 
+cdecl_list edecl_list sdecl_list fdecl_list EOF 
+                                 fdecl_list fdecl 
+                                            (?)
+
+** In state 203, looking ahead at LBRACKET, reducing production
+** stmt_list ->
+** is permitted because of the following sub-derivation:
+
+FUNCTION typ ID LPAREN formals_opt RPAREN COLON NEWLINE vdecl_list stmt_list END 
+                                                                   stmt_list stmt // lookahead token appears because stmt can begin with LBRACKET
+                                                                   . 
+
+** In state 203, looking ahead at LBRACKET, shifting is permitted
+** because of the following sub-derivation:
+
+FUNCTION typ ID LPAREN formals_opt RPAREN COLON NEWLINE vdecl_list stmt_list END 
+                                                        vdecl_list vdecl 
+                                                                   typ ID NEWLINE 
+                                                                   . LBRACKET primtyp RBRACKET 
+
+** Conflict (shift/reduce) in state 51.
+** Token involved: LBRACKET
+** This state is reached from program after reading:
+
+cdecl_list edecl_list sdecl_list SYSTEM ID LPAREN formals_opt RPAREN QUERY LBRACKET query_list RBRACKET AS ID COLON NEWLINE vdecl_list
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+program 
+cdecl_list edecl_list sdecl_list fdecl_list EOF 
+                      sdecl_list sdecl 
+                                 (?)
+
+** In state 51, looking ahead at LBRACKET, reducing production
+** stmt_list ->
+** is permitted because of the following sub-derivation:
+
+SYSTEM ID LPAREN formals_opt RPAREN QUERY LBRACKET query_list RBRACKET AS ID COLON NEWLINE vdecl_list stmt_list END 
+                                                                                                      stmt_list stmt // lookahead token appears because stmt can begin with LBRACKET
+                                                                                                      . 
+
+** In state 51, looking ahead at LBRACKET, shifting is permitted
+** because of the following sub-derivation:
+
+SYSTEM ID LPAREN formals_opt RPAREN QUERY LBRACKET query_list RBRACKET AS ID COLON NEWLINE vdecl_list stmt_list END 
+                                                                                           vdecl_list vdecl 
+                                                                                                      typ ID NEWLINE 
+                                                                                                      . LBRACKET primtyp RBRACKET 

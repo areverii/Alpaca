@@ -4,19 +4,18 @@
 open Ast
 %}
 
-%token INDENT LPAREN RPAREN LBRACKET RBRACKET LANGLE RANGLE COMMA COLON ASSIGN
-%token PLUS MINUS TIMES DIVIDE MOD NOT XOR EQ NEQ LT LEQ GT GEQ AND OR DOT SHIFTL SHIFTR BITOR BITAND BITXOR AND OR
-%token INT BOOL FLOAT VOID STRING RETURN IF ELSE FOR WHILE SYSTEM FUNCTION ENTITY COMPONENT DEFINE QUERY IN AS SPAWN
+%token LPAREN RPAREN LBRACKET RBRACKET COMMA COLON ASSIGN NEWLINE END
+%token PLUS MINUS TIMES DIVIDE MOD NOT EQ NEQ LT LEQ GT GEQ DOT AND OR SHIFTL SHIFTR BITOR BITAND BITXOR
+%token INT BOOL FLOAT VOID STRING RETURN IF ELSE FOR WHILE SYSTEM FUNCTION ENTITY COMPONENT QUERY IN AS SPAWN
 %token <int> ILIT
 %token <bool> BLIT
-%token <string> ID FLIT SLIT
+%token <string> ID SLIT 
+%token <float> FLIT
 %token EOF
 
 %start program
-%type <Ast.program> program
+%type <Ast.program> program 
 
-%nonassoc NOELSE
-%nonassoc ELSE
 %right ASSIGN
 %left OR 
 %left AND
@@ -24,79 +23,148 @@ open Ast
 %left BITXOR
 %left BITAND
 %left EQ NEQ
-%left LT GT LEQ GEQ NEQ
+%left LT GT LEQ GEQ
+%left SHIFTL SHIFTR
 %left PLUS MINUS
 %left TIMES DIVIDE MOD
 %right NOT
-%left DOT
 
 %%
-
 program:
-  decls EOF { $1 }
-
-decls:
-   /* nothing */ { ([], [])               }
- | decls vdecl { (($2 :: fst $1), snd $1) }
- | decls fdecl { (fst $1, ($2 :: snd $1)) }
+  cdecl_list edecl_list sdecl_list fdecl_list EOF {{
+    components = List.rev $1;
+    entities = List.rev $2;
+    systems = List.rev $3;
+    functions =  List.rev $4;
+    }}
  
 fdecl:
-   typ ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
-     { { typ = $1;
-	 fname = $2;
+   FUNCTION typ ID LPAREN formals_opt RPAREN COLON NEWLINE vdecl_list stmt_list END NEWLINE
+     { { typ = $2;
+	 fname = $3;
+	 formals = List.rev $5;
+	 locals = List.rev $9;
+	 body = List.rev $10 } }
+
+fdecl_list:
+  /*Nothing */ {[]}
+  | fdecl_list fdecl {$2 :: $1}
+
+cdecl:
+   COMPONENT ID COLON NEWLINE vdecl_list END NEWLINE
+   { {
+   cname = $2;
+	 members = List.rev $5;
+   } }
+
+cdecl_list:
+  /*Nothing */ {[]}
+  | cdecl_list cdecl {$2 :: $1}
+
+edecl:
+   ENTITY ID COLON NEWLINE comp_list END NEWLINE
+   { {
+   ename = $2;
+	 components = List.rev $5;
+   } }
+
+edecl_list:
+  /*Nothing */ {[]}
+  | edecl_list edecl {$2 :: $1}
+
+sdecl:
+   SYSTEM ID LPAREN formals_opt RPAREN QUERY LBRACKET query_list RBRACKET AS ID COLON NEWLINE vdecl_list stmt_list END NEWLINE
+   { {
+   sname = $2;
 	 formals = List.rev $4;
-	 locals = List.rev $7;
-	 body = List.rev $8 } }
+	 qlist = $8;
+   qlistname = $11;
+   locals = List.rev $14;
+   body = List.rev $15;
+   } }
+
+sdecl_list:
+  /*Nothing */ {[]}
+  | sdecl_list sdecl {$2 :: $1}
+
+comp_list:
+    ID NEWLINE           { [$1]     }
+  | comp_list ID NEWLINE { $2 :: $1 }
+
+query_list:
+    ID                   { [$1]     }
+  | query_list COMMA ID { $3 :: $1 }
 
 formals_opt:
     /* nothing */ { [] }
   | formal_list   { $1 }
 
 formal_list:
-    typ ID                   { [($1,$2)]     }
-  | formal_list COMMA typ ID { ($3,$4) :: $1 }
+    typ ID                   { [($1, $2)]     }
+  | formal_list COMMA typ ID { ($3, $4) :: $1 }
 
 typ:
-    INT   { Int   }
-  | BOOL  { Bool  }
-  | FLOAT { Float }
-  | VOID  { Void  }
+    INT    { Int   }
+  | BOOL   { Bool  }
+  | FLOAT  { Float }
+  | VOID   { Void }
+  | STRING { String }
+  | ENTITY { Entity }
+  | LT typ GT { List($2) }
 
 vdecl_list:
     /* nothing */    { [] }
   | vdecl_list vdecl { $2 :: $1 }
 
 vdecl:
-   typ ID SEMI { ($1, $2) }
+   typ ID NEWLINE { ($1, $2) }
 
 stmt_list:
     /* nothing */  { [] }
   | stmt_list stmt { $2 :: $1 }
 
-stmt:
-    expr SEMI                               { Expr $1               }
-  | RETURN expr_opt SEMI                    { Return $2             }
-  | LBRACE stmt_list RBRACE                 { Block(List.rev $2)    }
-  | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
-  | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7)        }
-  | FOR LPAREN expr_opt SEMI expr SEMI expr_opt RPAREN stmt
-                                            { For($3, $5, $7, $9)   }
-  | WHILE LPAREN expr RPAREN stmt           { While($3, $5)         }
+stmt_block:
+    stmt_list { Block(List.rev $1) }
 
+stmt:
+  | expr NEWLINE                            { Expr $1                }
+  | RETURN expr_opt NEWLINE                 { Return $2              }
+  | IF expr COLON NEWLINE stmt_block END NEWLINE 
+                                            { If($2, $5, Block([]))  }
+  | IF expr COLON NEWLINE stmt_block END NEWLINE ELSE COLON NEWLINE stmt_block END NEWLINE
+                                            { If($2, $5, $11)        }
+  | FOR ID IN expr COLON NEWLINE stmt_block END NEWLINE
+                                            { For($2, $4, $7)        }
+  | WHILE expr COLON NEWLINE stmt_block END NEWLINE          
+                                            { While($2, $5)          }
+  | SPAWN ID COLON NEWLINE comp_inst_list END NEWLINE { Spawn($2, List.rev $5)}       
+
+comp_inst_list:
+    ID COLON NEWLINE mem_inst_list END NEWLINE { [($1, List.rev $4)] } (*tuple of comp name, member dict *)
+  | comp_inst_list ID COLON NEWLINE mem_inst_list END NEWLINE { ($2, List.rev $5) :: $1  }   
+
+mem_inst_list: 
+  ID COLON expr NEWLINE {[($1, $3)]} 
+  | mem_inst_list ID COLON expr NEWLINE {($2, $4) :: $1}                      
+                             
 expr_opt:
     /* nothing */ { Noexpr }
   | expr          { $1 }
 
 expr:
-    LITERAL          { Literal($1)            }
-  | FLIT	           { Fliteral($1)           }
-  | BLIT             { BoolLit($1)            }
+    ILIT             { Literal(ILit($1))   }
+  | FLIT	           { Literal(FLit($1))   }
+  | BLIT             { Literal(BLit($1))   }
+  | SLIT             { Literal(SLit($1))   }
+  | LBRACKET expr_list RBRACKET { ListExpr($2) }
   | ID               { Id($1)                 }
   | expr PLUS   expr { Binop($1, Add,   $3)   }
   | expr MINUS  expr { Binop($1, Sub,   $3)   }
   | expr TIMES  expr { Binop($1, Mult,  $3)   }
   | expr DIVIDE expr { Binop($1, Div,   $3)   }
-  | expr EQ     expr { Binop($1, Equal, $3)   }
+  | expr MOD expr    { Binop($1, Mod,   $3)   }
+  | expr BITXOR expr    { Binop($1, BitXor,   $3)   }
+  | expr EQ     expr { Binop($1, Eq, $3)      }
   | expr NEQ    expr { Binop($1, Neq,   $3)   }
   | expr LT     expr { Binop($1, Less,  $3)   }
   | expr LEQ    expr { Binop($1, Leq,   $3)   }
@@ -104,16 +172,27 @@ expr:
   | expr GEQ    expr { Binop($1, Geq,   $3)   }
   | expr AND    expr { Binop($1, And,   $3)   }
   | expr OR     expr { Binop($1, Or,    $3)   }
+  | expr SHIFTL expr { Binop($1, ShiftL,   $3)   }
+  | expr SHIFTR expr { Binop($1, ShiftR,   $3)   }
+  | expr BITOR   expr { Binop($1, BitOr,   $3)   }
+  | expr BITAND    expr { Binop($1, BitAnd,   $3)   }
   | MINUS expr %prec NOT { Unop(Neg, $2)      }
   | NOT expr         { Unop(Not, $2)          }
   | ID ASSIGN expr   { Assign($1, $3)         }
+  | ID DOT ID DOT ID ASSIGN expr {CompMemberAssign($1, $3, $5, $7)}
+  | ID DOT ID DOT ID { CompMember($1, $3, $5) }
+  | ID LBRACKET expr RBRACKET { ListItem($1, $3) }
   | ID LPAREN args_opt RPAREN { Call($1, $3)  }
   | LPAREN expr RPAREN { $2                   }
 
 args_opt:
     /* nothing */ { [] }
-  | args_list  { List.rev $1 }
+  | expr_list  { List.rev $1 }
 
-args_list:
+expr_list:
     expr                    { [$1] }
-  | args_list COMMA expr { $3 :: $1 }
+  | expr_list COMMA expr { $3 :: $1 }
+
+(* Decisions made:
+Tabs are a stylic choice -- no meaning *)
+(* Newlines matter!! *)

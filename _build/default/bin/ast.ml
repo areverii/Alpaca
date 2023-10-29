@@ -1,14 +1,12 @@
 (* Abstract Syntax Tree and functions for printing it *)
 
-type triop = Dot
-
 type binop = Add | Sub | Mult | Div | Mod | ShiftR | ShiftL |
-              BitOr | BitAnd | Xor | Eq | Neq | Less | Greater | Leq | Geq |
+              BitOr | BitAnd | BitXor | Eq | Neq | Less | Greater | Leq | Geq |
               And | Or
 
 type uop = Neg | Not
 
-type typ = Int | Bool | Float | String | Entity | Void 
+type typ = Int | Bool | Float | String | Entity | Void | List of typ
 
 type bind = typ * string
 
@@ -17,11 +15,11 @@ type lit =
   | SLit of string
   | FLit of float
   | BLit of bool
-  | LLit of lit list
-
+  
 type expr =
     Binop of expr * binop * expr
   | Literal of lit 
+  | ListExpr of expr list
   | Unop of uop * expr
   | Assign of string * expr
   | CompMemberAssign of string * string * string * expr
@@ -35,42 +33,51 @@ type stmt =
     Block of stmt list
   | Expr of expr
   | Return of expr
-  | If of expr * stmt
-  | IfElse of expr * stmt * stmt
+  | If of expr * stmt * stmt 
   | For of string * expr * stmt
   | While of expr * stmt 
   | Spawn of string * (string * ((string * expr) list)) list
 
 type func_decl = {
-    typ : typ;
-    fname : string;
-    formals : bind list;
-    locals : bind list;
-    body : stmt list;
+    typ: typ;
+    fname: string;
+    formals: bind list;
+    locals: bind list;
+    body: stmt list;
   }
 
 type comp_decl = {
-  cname : string;
-  members : bind list;
+  cname: string;
+  members: bind list;
 }
 
 type entity_decl = {
   ename: string;
-  components : string list;
+  components: string list;
 }
 
 type system_decl = {
-  sname : string;
-  formals : bind list;
-  qlist : string list;
-  qlistname : string;
-  body : stmt list;
+  sname: string;
+  formals: bind list;
+  qlist: string list;
+  qlistname: string;
+  locals: bind list;
+  body: stmt list;
 }
 
+type program = {
+  components: comp_decl list;
+  entities: entity_decl list;
+  systems: system_decl list;
+  functions: func_decl list;
+}
 
-type program = comp_decl list * entity_decl list * system_decl list * func_decl list 
+(* 
+Change log: Phila 
+-> reverted to one rule for if (see parser)
+-> added locals in system_decl
 
-(* Pretty-printing functions 
+Pretty-printing functions 
 
 let string_of_op = function
     Add -> "+"
