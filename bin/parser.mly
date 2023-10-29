@@ -73,15 +73,26 @@ edecl_list:
   | edecl_list edecl {$2 :: $1}
 
 sdecl:
-   SYSTEM ID LPAREN formals_opt RPAREN QUERY LBRACKET query_list RBRACKET AS ID COLON NEWLINE vdecl_list stmt_list END NEWLINE
+   SYSTEM ID LPAREN formals_opt RPAREN COLON NEWLINE query_list vdecl_list stmt_list END NEWLINE
    { {
    sname = $2;
 	 formals = List.rev $4;
-	 qlist = $8;
-   qlistname = $11;
-   locals = List.rev $14;
-   body = List.rev $15;
+	 qlist = List.rev $8;
+   locals = List.rev $9;
+   body = List.rev $10;
    } }
+
+query: 
+  QUERY LT ID GT LBRACKET query_comp_list RBRACKET AS ID NEWLINE
+  { {
+  tname = $3;
+  lname = $9;
+  components = List.rev $6;
+  } }
+
+query_list: 
+    query            { [$1]     }
+  | query_list query { $2 :: $1 } 
 
 sdecl_list:
   /*Nothing */ {[]}
@@ -91,9 +102,9 @@ comp_list:
     ID NEWLINE           { [$1]     }
   | comp_list ID NEWLINE { $2 :: $1 }
 
-query_list:
-    ID                   { [$1]     }
-  | query_list COMMA ID { $3 :: $1 }
+query_comp_list:
+    ID                        { [$1]     }
+  | query_comp_list COMMA ID  { $3 :: $1 }
 
 formals_opt:
     /* nothing */ { [] }
@@ -109,7 +120,7 @@ typ:
   | FLOAT  { Float }
   | VOID   { Void }
   | STRING { String }
-  | ENTITY { Entity }
+  | ENTITY LT ID GT { Entity($3) }
   | LT typ GT { List($2) }
 
 vdecl_list:
@@ -163,7 +174,7 @@ expr:
   | expr TIMES  expr { Binop($1, Mult,  $3)   }
   | expr DIVIDE expr { Binop($1, Div,   $3)   }
   | expr MOD expr    { Binop($1, Mod,   $3)   }
-  | expr BITXOR expr    { Binop($1, BitXor,   $3)   }
+  | expr BITXOR expr { Binop($1, BitXor,   $3)   }
   | expr EQ     expr { Binop($1, Eq, $3)      }
   | expr NEQ    expr { Binop($1, Neq,   $3)   }
   | expr LT     expr { Binop($1, Less,  $3)   }

@@ -6,7 +6,7 @@ type binop = Add | Sub | Mult | Div | Mod | ShiftR | ShiftL |
 
 type uop = Neg | Not
 
-type typ = Int | Bool | Float | String | Entity | Void | List of typ
+type typ = Int | Bool | Float | String | Entity of string | Void | List of typ
 
 type bind = typ * string
 
@@ -56,11 +56,16 @@ type entity_decl = {
   components: string list;
 }
 
+type query = {
+  tname: string;
+  components: string list;
+  lname: string;
+}
+
 type system_decl = {
   sname: string;
   formals: bind list;
-  qlist: string list;
-  qlistname: string;
+  qlist: query list;
   locals: bind list;
   body: stmt list;
 }
@@ -148,7 +153,7 @@ let rec string_of_typ = function
   | Float -> "float"
   | Void -> "void"
   | String -> "string"
-  | Entity -> "Entity"
+  | Entity tname -> "entity<" ^ tname ^ ">"
   | List(t) -> "<" ^ string_of_typ t ^ ">"
   
 
@@ -165,9 +170,13 @@ let string_of_fdecl fdecl =
   String.concat "" (List.map string_of_stmt fdecl.body) ^
   "end\n"
 
+let string_of_query qdecl =
+  "query<" ^ qdecl.tname ^ "> [" ^ String.concat ", " qdecl.components ^ "] as " ^ qdecl.lname ^ "\n"
+
+
 let string_of_sdecl sdecl =
-  "system " ^ sdecl.sname ^ "(" ^ String.concat ", " (List.map string_of_fmlsdcl sdecl.formals) ^ ")" ^ " query ["
-  ^ String.concat ", " sdecl.qlist ^ "] as " ^ sdecl.qlistname ^ ":\n" ^
+  "system " ^ sdecl.sname ^ "(" ^ String.concat ", " (List.map string_of_fmlsdcl sdecl.formals) ^ ")" ^ ":\n" ^
+  String.concat "" (List.map string_of_query sdecl.qlist) ^
   String.concat "" (List.map string_of_vdecl sdecl.locals) ^
   String.concat "" (List.map string_of_stmt sdecl.body) ^
   "end\n"
