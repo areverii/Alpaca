@@ -1,1 +1,1 @@
-bin/alpaca.ml: Arg Ast Codegen Lexing Llvm Llvm_analysis Parser Sast Scanner Semant
+bin/alpaca.ml: Arg Ast Lexing Parser Sast Scanner Semant

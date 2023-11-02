@@ -1,1 +1,1 @@
-bin/ast.ml:
+bin/ast.ml: List String
