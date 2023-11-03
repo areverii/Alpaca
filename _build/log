@@ -1,9 +1,9 @@
-# dune build
+# dune exec alpaca -- -s
 # OCAMLPARAM: unset
 # Shared cache: disabled
 # Workspace root: /home/cs107/alpaca
 # Auto-detected concurrency: 4
-$ /usr/bin/ocamlc.opt -config > /tmp/dune_93acba_output
+$ /usr/bin/ocamlc.opt -config > /tmp/dune_aa58e2_output
 # Dune context:
 #  { name = "default"
 #  ; kind = "default"
@@ -97,12 +97,7 @@ $ /usr/bin/ocamlc.opt -config > /tmp/dune_93acba_output
 #      }
 #  ; instrument_with = []
 #  }
-$ (cd _build/default && /usr/bin/ocamldep.opt -modules -impl bin/alpaca.ml) > _build/default/bin/.alpaca.eobjs/dune__exe__Alpaca.impl.d
+$ (cd _build/default && /usr/bin/ocamldep.opt -modules -impl bin/semant.ml) > _build/default/bin/.alpaca.eobjs/dune__exe__Semant.impl.d
 $ (cd _build/default && /usr/bin/ocamlc.opt -w @1..3@5..28@30..39@43@46..47@49..57@61..62@67@69-40 -strict-sequence -strict-formats -short-paths -keep-locs -warn-error -A -g -bin-annot -I bin/.alpaca.eobjs/byte -I /home/cs107/.opam/default/lib/llvm -I lib/.alpaca.objs/byte -no-alias-deps -opaque -open Dune__exe -o bin/.alpaca.eobjs/byte/dune__exe__Semant.cmo -c -impl bin/semant.ml)
-> File "bin/semant.ml", line 103, characters 8-16:
-> 103 |       | Fliteral l -> (Float, SFliteral l)
->               ^^^^^^^^
-> Error: This variant pattern is expected to have type expr
->        The constructor Fliteral does not belong to type expr
-> Hint: Did you mean Literal?
-[2]
+$ (cd _build/default && /usr/bin/ocamlopt.opt -w @1..3@5..28@30..39@43@46..47@49..57@61..62@67@69-40 -strict-sequence -strict-formats -short-paths -keep-locs -warn-error -A -g -I bin/.alpaca.eobjs/byte -I bin/.alpaca.eobjs/native -I /home/cs107/.opam/default/lib/llvm -I lib/.alpaca.objs/byte -I lib/.alpaca.objs/native -intf-suffix .ml -no-alias-deps -opaque -open Dune__exe -o bin/.alpaca.eobjs/native/dune__exe__Semant.cmx -c -impl bin/semant.ml)
+$ (cd _build/default && /usr/bin/ocamlopt.opt -w @1..3@5..28@30..39@43@46..47@49..57@61..62@67@69-40 -strict-sequence -strict-formats -short-paths -keep-locs -warn-error -A -g -o bin/alpaca.exe /home/cs107/.opam/default/lib/llvm/shared/llvm.cmxa -I /home/cs107/.opam/default/lib/llvm /home/cs107/.opam/default/lib/llvm/shared/llvm_analysis.cmxa -I /home/cs107/.opam/default/lib/llvm lib/alpaca.cmxa bin/.alpaca.eobjs/native/dune__exe.cmx bin/.alpaca.eobjs/native/dune__exe__Ast.cmx bin/.alpaca.eobjs/native/dune__exe__Parser.cmx bin/.alpaca.eobjs/native/dune__exe__Sast.cmx bin/.alpaca.eobjs/native/dune__exe__Scanner.cmx bin/.alpaca.eobjs/native/dune__exe__Semant.cmx bin/.alpaca.eobjs/native/dune__exe__Alpaca.cmx)

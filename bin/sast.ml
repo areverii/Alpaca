@@ -27,10 +27,10 @@ type sstmt =
 
   type ssystem_decl = {
     ssname: string;
-    sformals: bind list;
-    sqlist: query list;
-    slocals: bind list;
-    sbody: sstmt list;
+    ssqlist: query list;
+    ssformals: bind list;
+    sslocals: bind list;
+    ssbody: sstmt list;
   }
 
   type sfunc_decl = {
@@ -98,10 +98,10 @@ let string_of_sfdecl fdecl =
     "end\n"
 
 let string_of_ssdecl sdecl =
-      "system " ^ sdecl.ssname ^ "(" ^ String.concat ", " (List.map string_of_fmlsdcl sdecl.sformals) ^ ")" ^ ":\n" ^
-      String.concat "" (List.map string_of_query sdecl.sqlist) ^
-      String.concat "" (List.map string_of_vdecl sdecl.slocals) ^
-      String.concat "" (List.map string_of_sstmt sdecl.sbody) ^
+      "system " ^ sdecl.ssname ^ "(" ^ String.concat ", " (List.map string_of_fmlsdcl sdecl.ssformals) ^ ")" ^ ":\n" ^
+      String.concat "" (List.map string_of_query sdecl.ssqlist) ^
+      String.concat "" (List.map string_of_vdecl sdecl.sslocals) ^
+      String.concat "" (List.map string_of_sstmt sdecl.ssbody) ^
       "end\n"
 
 let string_of_sprogram prog =

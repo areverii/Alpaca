@@ -2,17 +2,15 @@
 
 open Ast
 open Sast
-
 module StringMap = Map.Make(String)
 
 (* Semantic checking of the AST. Returns an SAST if successful,
    throws an exception if something is wrong.
 
-   Check each global variable, then check each function *)
+   Check each function,  *)
+let check program  =
 
-let check (globals, functions) =
-
-  (* Check if a certain kind of binding has void type or is a duplicate
+  (*Check if a certain kind of binding has void type or is a duplicate
      of another, previously checked binding *)
   let check_binds (kind : string) (to_check : bind list) = 
     let name_compare (_, n1) (_, n2) = compare n1 n2 in
@@ -29,14 +27,9 @@ let check (globals, functions) =
 
     in let _ = List.fold_left check_it [] (List.sort name_compare to_check) 
        in to_check
-  in 
-
-  (**** Checking Global Variables ****)
-
-  let globals' = check_binds "global" globals in
+  in
 
   (**** Checking Functions ****)
-
 
   (* Collect function declarations for built-in functions: no bodies *)
   let built_in_decls = 
@@ -44,10 +37,10 @@ let check (globals, functions) =
       typ = Void; fname = name; 
       formals = [(ty, "x")];
       locals = []; body = [] } map
-    in List.fold_left add_bind StringMap.empty [ ("print", Int);
+    in List.fold_left add_bind StringMap.empty [ ("prints", String);
 			                         ("printb", Bool);
 			                         ("printf", Float);
-			                         ("printbig", Int) ]
+			                         ("printi", Int) ]
   in
 
   (* Add function name to symbol table *)
@@ -63,7 +56,7 @@ let check (globals, functions) =
   in
 
   (* Collect all other function names into one symbol table *)
-  let function_decls = List.fold_left add_func built_in_decls functions
+  let function_decls = List.fold_left add_func built_in_decls program.functions
   in
   
   (* Return a function from our symbol table *)
@@ -72,9 +65,21 @@ let check (globals, functions) =
     with Not_found -> raise (Failure ("unrecognized function " ^ s))
   in
 
-  let _ = find_func "main" in (* Ensure "main" is defined *)
+  (* Ensure "main" is correctly defined *)
+  let main_func = find_func "main" 
+  in 
 
-  let check_function func =
+  let check_main = 
+    match main_func with
+      { typ = Void; formals = [(List String, _)]; _ } -> ()
+      | _ -> raise (Failure ("main function args or return type incorrect")) 
+  in 
+
+  let _ = check_main 
+  in
+  
+  let check_function (func : func_decl) =
+    
     (* Make sure no formals or locals are void or duplicates *)
     let formals' = check_binds "formal" func.formals in
     let locals' = check_binds "local" func.locals in
@@ -85,6 +90,7 @@ let check (globals, functions) =
        if lvaluet = rvaluet then lvaluet else raise (Failure err)
     in   
 
+(*     
     (* Build local symbol table of variables for this function *)
     let symbols = List.fold_left (fun m (ty, name) -> StringMap.add name ty m)
 	                StringMap.empty (globals' @ formals' @ locals' )
@@ -94,18 +100,21 @@ let check (globals, functions) =
     let type_of_identifier s =
       try StringMap.find s symbols
       with Not_found -> raise (Failure ("undeclared identifier " ^ s))
-    in
+    in *)
 
 
     (* Return a semantically-checked expression, i.e., with a type *)
     let rec expr = function
-        Literal  l -> (Int, SLiteral l)
-      | Fliteral l -> (Float, SFliteral l)
+        Literal (ILit l) -> (Int, SLiteral (ILit l))
+      | Literal (FLit l) -> (Float, SLiteral (FLit l))
+      | Literal (SLit l) -> (String, SLiteral (SLit l))
+      | Literal (BLit l) -> (Bool, SLiteral (BLit l))
+      (* | Fliteral l -> (Float, SFliteral l)
       | BoolLit l  -> (Bool, SBoolLit l)
       | Noexpr     -> (Void, SNoexpr)
       | Id s       -> (type_of_identifier s, SId s)
       | Assign(var, e) as ex -> 
-          let lt = type_of_identifier var
+          let lt = type_of_identifier var 
           and (rt, e') = expr e in
           let err = "illegal assignment " ^ string_of_typ lt ^ " = " ^ 
             string_of_typ rt ^ " in " ^ string_of_expr ex
@@ -136,7 +145,7 @@ let check (globals, functions) =
 	      Failure ("illegal binary operator " ^
                        string_of_typ t1 ^ " " ^ string_of_op op ^ " " ^
                        string_of_typ t2 ^ " in " ^ string_of_expr e))
-          in (ty, SBinop((t1, e1'), op, (t2, e2')))
+          in (ty, SBinop((t1, e1'), op, (t2, e2'))) *)
       | Call(fname, args) as call -> 
           let fd = find_func fname in
           let param_length = List.length fd.formals in
@@ -151,18 +160,20 @@ let check (globals, functions) =
           in 
           let args' = List.map2 check_call fd.formals args
           in (fd.typ, SCall(fname, args'))
+      | _ -> raise (Failure "not implemented")
+
     in
 
-    let check_bool_expr e = 
+    (* let check_bool_expr e = 
       let (t', e') = expr e
       and err = "expected Boolean expression in " ^ string_of_expr e
       in if t' != Bool then raise (Failure err) else (t', e') 
-    in
+    in *)
 
     (* Return a semantically-checked statement i.e. containing sexprs *)
     let rec check_stmt = function
         Expr e -> SExpr (expr e)
-      | If(p, b1, b2) -> SIf(check_bool_expr p, check_stmt b1, check_stmt b2)
+      (*| If(p, b1, b2) -> SIf(check_bool_expr p, check_stmt b1, check_stmt b2)
       | For(e1, e2, e3, st) ->
 	  SFor(expr e1, check_bool_expr e2, expr e3, check_stmt st)
       | While(p, s) -> SWhile(check_bool_expr p, check_stmt s)
@@ -173,7 +184,7 @@ let check (globals, functions) =
 		   string_of_typ func.typ ^ " in " ^ string_of_expr e))
 	    
 	    (* A block is correct if each statement is correct and nothing
-	       follows any Return statement.  Nested blocks are flattened. *)
+	       follows any Return statement.  Nested blocks are flattened. *)*)
       | Block sl -> 
           let rec check_stmt_list = function
               [Return _ as s] -> [check_stmt s]
@@ -182,15 +193,23 @@ let check (globals, functions) =
             | s :: ss         -> check_stmt s :: check_stmt_list ss
             | []              -> []
           in SBlock(check_stmt_list sl)
+        | _ -> raise (Failure "check_stmt: not implemented") 
 
     in (* body of check_function *)
+
     { styp = func.typ;
       sfname = func.fname;
       sformals = formals';
       slocals  = locals';
       sbody = match check_stmt (Block func.body) with
-	SBlock(sl) -> sl
-      | _ -> let err = "internal error: block didn't become a block?"
-      in raise (Failure err)
+            SBlock(sl) -> sl
+            | _ -> let err = "internal error: block didn't become a block?"
+          in raise (Failure err) 
+    } 
+   
+  in 
+    { scomponents = [];
+      sentities = [];
+      ssystems = [];
+      sfunctions = List.map check_function program.functions;
     }
-  in (globals', List.map check_function functions)

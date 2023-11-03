@@ -2,7 +2,7 @@
    check the resulting AST and generate an SAST from it, generate LLVM IR,
    and dump the module *)
 
-type action = Ast | Sast (* LLVM_IR | Compile*)
+type action = Ast | Sast | LLVM_IR | Compile
 
 let () =
   let action = ref Compile in
