@@ -1,0 +1,9 @@
+function void print_3(int input):
+    printi(5000000000)
+end
+
+function void main(<string> args):
+    print_3(2)
+    prints("String!")
+    printf(3.453)
+end

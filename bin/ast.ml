@@ -11,7 +11,7 @@ type typ = Int | Bool | Float | String | Entity of string | Void | List of typ
 type bind = typ * string
 
 type lit = 
-    ILit of int
+    ILit of int64
   | SLit of string
   | FLit of float
   | BLit of bool
@@ -103,10 +103,10 @@ let string_of_uop = function
   | Not -> "not"
 
 let string_of_literal = function
-    ILit(l) -> string_of_int l
+    ILit(l) -> Int64.to_string l
   | FLit(l) -> string_of_float l
   | BLit(l) -> string_of_bool l
-  | SLit(l) -> l
+  | SLit(l) -> "\"" ^ l ^ "\""
 
 let rec string_of_expr = function
     Literal(l) -> string_of_literal l

@@ -1,5 +1,0 @@
-dune__exe__Ast
-dune__exe__Parser
-dune__exe__Sast
-dune__exe__Scanner
-dune__exe__Semant

@@ -1,20 +1,27 @@
 
-# "make all" builds the executable as well as the "printbig" library designed
-# to test linking external code
+# "make all" builds the executable
+
+CC = gcc
+LLC = llc
 
 .PHONY : all
-all : ./_build/default/bin/microc.exe printbig.o
+all : ./_build/default/bin/microc.exe
 
 # "make test" Compiles everything and runs the regression tests
 
-.PHONY : test
-test : all testall.sh
-	./testall.sh
+.PHONY : testall
+testall : tests/helloworld.exe tests/simplefuncs.exe
+	./testAlpaca.py $^
 
-# "make" will just compile the MicroC compiler along with printbig.c
+.PHONY : test_%.exe
+test_%.exe : tests/%.exe
+	./testAlpaca.py $<
 
-./_build/default/bin/microc.exe : bin/parser.mly bin/scanner.mll bin/codegen.ml bin/semant.ml bin/microc.ml
+# "make" will just compile the Alpaca compiler along with printbig.c
+
+./_build/default/bin/alpaca.exe : bin/parser.mly bin/scanner.mll bin/codegen.ml bin/semant.ml bin/alpaca.ml
 	dune build
+	touch $@
 
 # "make printbig" compiles the helper C file for the printbig built-in
 
@@ -27,6 +34,10 @@ printbig : printbig.c
 clean :
 	dune clean
 	rm -rf testall.log *.diff printbig.o microc.opam
+	rm *.exe tests/*.exe
+
+%.exe: %.alp ./_build/default/bin/alpaca.exe
+	./_build/default/bin/alpaca.exe -c $< | $(LLC) "-relocation-model=pic" | $(CC) -x assembler -o $@ -
 
 
 # Building the zip

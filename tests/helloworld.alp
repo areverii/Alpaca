@@ -1,0 +1,3 @@
+function void main(<string> args):
+    prints("Hello World")
+end

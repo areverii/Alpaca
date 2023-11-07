@@ -1,6 +1,7 @@
-(* Ocamllex scanner for MicroC *)
+(* Ocamllex scanner for Alpaca *)
 
-{ open Parser }
+{ open Parser
+  open Int64 }
 
 let digit = ['0' - '9']
 let digits = digit+
@@ -9,7 +10,7 @@ let stringlit = [^ '\"' '\n' '\r']*
 rule token = parse
   [' ' '\r' '\t'] { token lexbuf } (* Whitespace *)
 | ['\n']+        { NEWLINE }
-| '#'         { comment lexbuf }        (* Comments *)
+| '#'         { comment lexbuf }   (* Comments *)
 | '('         { LPAREN }
 | ')'         { RPAREN }
 | '['         { LBRACKET }
@@ -58,9 +59,9 @@ rule token = parse
 | "void"      { VOID }
 | "true"      { BLIT(true)  }
 | "false"     { BLIT(false) }
-| digits as lxm { ILIT(int_of_string lxm) }
+| digits as lxm { ILIT(Int64.of_string lxm) }
 | digits '.'  digit* as lxm { FLIT(float_of_string lxm) }
-| '\"' stringlit '\"' as str { SLIT(str) }
+| '\"' (stringlit as str) '\"' { SLIT(str) }
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
 | eof { EOF }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }

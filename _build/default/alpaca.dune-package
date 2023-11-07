@@ -1,4 +1,0 @@
-(lang dune 3.11)
-(name alpaca)
-(sections (lib .) (bin ../../bin) (doc ../../doc/alpaca))
-(files (lib (META dune-package opam)) (bin (alpaca)) (doc (README)))
