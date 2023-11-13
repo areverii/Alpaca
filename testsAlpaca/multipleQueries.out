@@ -1,0 +1,10 @@
+
+
+system movement(int x, <string> args):
+query<a> [Velocity, Position] as ent_list
+query<b> [Position] as ent_list
+int a
+int y
+print("hello")
+end
+

@@ -1,0 +1,47 @@
+component A:                       
+int x 
+int y
+end 
+
+component B:
+string name
+<int> nums
+end 
+
+component C:
+< <string> > lists
+bool bad
+end 
+
+entity ENT:
+A
+B
+C
+end 
+
+system movement(int vals):
+query <a> [A, B, C] as ents
+int y
+int v
+y = v
+print("Idk what's going on")
+end
+
+function void main(<string> args):
+print("Hello world")
+end
+
+function int someOther(int x):
+int y
+int x
+end
+
+function int fs(string what):
+int y
+int x
+end
+
+function int fs(string what):
+int y
+string x
+end

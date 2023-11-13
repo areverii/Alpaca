@@ -1,0 +1,18 @@
+component A:
+int x
+end
+
+entity B:
+A
+end
+
+system name():
+query<a> [A] as list
+end
+
+function void main():
+int x
+int y
+x = 1 + 1
+y = 2 + 2
+end

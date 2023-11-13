@@ -1,0 +1,10 @@
+component A:
+int x
+end
+
+entity B:
+end
+
+function void main():
+end
+
