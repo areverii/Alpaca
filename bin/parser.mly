@@ -167,7 +167,7 @@ expr:
   | FLIT	           { Literal(FLit($1))   }
   | BLIT             { Literal(BLit($1))   }
   | SLIT             { Literal(SLit($1))   }
-  | LBRACKET expr_list RBRACKET { ListExpr($2) }
+  | LBRACKET expr_list RBRACKET { ListExpr(List.rev $2) }
   | ID               { Id($1)                 }
   | expr PLUS   expr { Binop($1, Add,   $3)   }
   | expr MINUS  expr { Binop($1, Sub,   $3)   }

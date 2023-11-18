@@ -50,6 +50,9 @@ If the source code is invalid, an error is raised in the compilation process
 (i.e. scanning, parsing, semantically checking the ast, etc). The corresponding 
 .exe file is not built.
 
+RUN PARSER
+dune exec alpaca -- -s
+
 
 
    ⠀⠀⠀⠀⠀⠀⠀⣾⣷⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣶⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀

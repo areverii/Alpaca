@@ -90,18 +90,16 @@ let check program  =
        if lvaluet = rvaluet then lvaluet else raise (Failure err)
     in   
 
-(*     
     (* Build local symbol table of variables for this function *)
     let symbols = List.fold_left (fun m (ty, name) -> StringMap.add name ty m)
-	                StringMap.empty (globals' @ formals' @ locals' )
+	                StringMap.empty (formals' @ locals')
     in
 
     (* Return a variable from our local symbol table *)
     let type_of_identifier s =
       try StringMap.find s symbols
       with Not_found -> raise (Failure ("undeclared identifier " ^ s))
-    in *)
-
+    in 
 
     (* Return a semantically-checked expression, i.e., with a type *)
     let rec expr = function
@@ -109,9 +107,7 @@ let check program  =
       | Literal (FLit l) -> (Float, SLiteral (FLit l))
       | Literal (SLit l) -> (String, SLiteral (SLit l))
       | Literal (BLit l) -> (Bool, SLiteral (BLit l))
-      (* | Fliteral l -> (Float, SFliteral l)
-      | BoolLit l  -> (Bool, SBoolLit l)
-      | Noexpr     -> (Void, SNoexpr)
+      | Noexpr           -> (Void, SNoexpr)
       | Id s       -> (type_of_identifier s, SId s)
       | Assign(var, e) as ex -> 
           let lt = type_of_identifier var 
@@ -131,21 +127,21 @@ let check program  =
       | Binop(e1, op, e2) as e -> 
           let (t1, e1') = expr e1 
           and (t2, e2') = expr e2 in
-          (* All binary operators require operands of the same type *)
+          let ints_or_floats = (t1 = Int || t1 = Float) && (t2 = Int || t2 = Float) in
+          (* Some binary operators require operands of the same type *)
           let same = t1 = t2 in
           (* Determine expression type based on operator and operand types *)
           let ty = match op with
-            Add | Sub | Mult | Div when same && t1 = Int   -> Int
-          | Add | Sub | Mult | Div when same && t1 = Float -> Float
-          | Equal | Neq            when same               -> Bool
-          | Less | Leq | Greater | Geq
-                     when same && (t1 = Int || t1 = Float) -> Bool
+            Add | Sub | Mult | Div when same && t1 = Int -> Int
+          | Add | Sub | Mult | Div when ints_or_floats   -> Float
+          | Eq | Neq               when (same && t1 = String || t1 = Bool) || ints_or_floats -> Bool
+          | Less | Leq | Greater | Geq when ints_or_floats -> Bool
           | And | Or when same && t1 = Bool -> Bool
-          | _ -> raise (
-	      Failure ("illegal binary operator " ^
+          | BitOr | BitAnd | BitXor | Mod | ShiftR | ShiftL when same && t1 = Int -> Int
+          | _ -> raise (Failure ("illegal binary operator " ^
                        string_of_typ t1 ^ " " ^ string_of_op op ^ " " ^
                        string_of_typ t2 ^ " in " ^ string_of_expr e))
-          in (ty, SBinop((t1, e1'), op, (t2, e2'))) *)
+          in (ty, SBinop((t1, e1'), op, (t2, e2')))
       | Call(fname, args) as call -> 
           let fd = find_func fname in
           let param_length = List.length fd.formals in
@@ -160,31 +156,55 @@ let check program  =
           in 
           let args' = List.map2 check_call fd.formals args
           in (fd.typ, SCall(fname, args'))
-      | _ -> raise (Failure "not implemented")
-
+      | ListExpr es -> 
+          let ses = List.map expr es in
+            (try 
+              let t1 = fst (List.hd ses) in
+              let all_ts_eq = List.for_all (fun t -> t = t1) (List.map fst ses) in
+              if all_ts_eq then
+                (List t1, SListExpr ses)
+              else
+                raise (Failure "list element types differ")
+            with Failure _ -> raise (Failure "empty list literal not allowed"))
+      | ListItem (s, e) ->  
+        let (t, e') = expr e
+        in if t = Int 
+          then match type_of_identifier s with 
+              List ty -> (ty, SListItem (s, (t, e')))
+              | _ -> raise (Failure ("attempting to index non-list " ^ s))
+         else raise (Failure "index expression not of type int")
+      | CompMember (ent, comp, field) -> raise (Failure "not implemented")
+      | CompMemberAssign (ent, comp, field, v) -> raise (Failure "not implemented")
     in
 
-    (* let check_bool_expr e = 
+     let check_bool_expr e = 
       let (t', e') = expr e
       and err = "expected Boolean expression in " ^ string_of_expr e
       in if t' != Bool then raise (Failure err) else (t', e') 
-    in *)
+    in
 
     (* Return a semantically-checked statement i.e. containing sexprs *)
     let rec check_stmt = function
         Expr e -> SExpr (expr e)
-      (*| If(p, b1, b2) -> SIf(check_bool_expr p, check_stmt b1, check_stmt b2)
-      | For(e1, e2, e3, st) ->
-	  SFor(expr e1, check_bool_expr e2, expr e3, check_stmt st)
+      | If(p, b1, b2) -> SIf(check_bool_expr p, check_stmt b1, check_stmt b2)
+      | For(s, e, stmt) -> 
+          let (t, e') = expr e
+          in (match t with
+              List t1 -> if (type_of_identifier s = t1) then
+                          SFor (s, (t, e'), check_stmt stmt)
+                        else
+                          raise (Failure ("for loop variable " ^ s ^ " of type "
+                                          ^ string_of_typ (type_of_identifier s)
+                                          ^ " does not match list type " ^ string_of_typ t))
+            | _ -> raise (Failure ("attempting to iterate over non-list " ^ s)))
       | While(p, s) -> SWhile(check_bool_expr p, check_stmt s)
       | Return e -> let (t, e') = expr e in
-        if t = func.typ then SReturn (t, e') 
-        else raise (
-	  Failure ("return gives " ^ string_of_typ t ^ " expected " ^
-		   string_of_typ func.typ ^ " in " ^ string_of_expr e))
+          if t = func.typ then SReturn (t, e') 
+          else raise (Failure ("return gives " ^ string_of_typ t ^ " expected " ^
+                        string_of_typ func.typ ^ " in " ^ string_of_expr e))
 	    
 	    (* A block is correct if each statement is correct and nothing
-	       follows any Return statement.  Nested blocks are flattened. *)*)
+	       follows any Return statement.  Nested blocks are flattened. *)
       | Block sl -> 
           let rec check_stmt_list = function
               [Return _ as s] -> [check_stmt s]
@@ -193,7 +213,7 @@ let check program  =
             | s :: ss         -> check_stmt s :: check_stmt_list ss
             | []              -> []
           in SBlock(check_stmt_list sl)
-        | _ -> raise (Failure "check_stmt: not implemented") 
+      | Spawn (ent, es) -> raise (Failure "spawn not implemented") 
 
     in (* body of check_function *)
 

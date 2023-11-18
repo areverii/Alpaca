@@ -100,7 +100,7 @@ let string_of_op = function
 
 let string_of_uop = function
     Neg -> "-"
-  | Not -> "not"
+  | Not -> "not "
 
 let string_of_literal = function
     ILit(l) -> Int64.to_string l
@@ -110,7 +110,7 @@ let string_of_literal = function
 
 let rec string_of_expr = function
     Literal(l) -> string_of_literal l
-  | ListExpr(exprs) -> String.concat ", " (List.map (string_of_expr) exprs)
+  | ListExpr(exprs) -> "[" ^ String.concat ", " (List.map (string_of_expr) exprs) ^ "]"
   | Id(s) -> s
   | Binop(e1, o, e2) ->
       string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
@@ -154,7 +154,7 @@ let rec string_of_typ = function
   | Void -> "void"
   | String -> "string"
   | Entity tname -> "entity<" ^ tname ^ ">"
-  | List(t) -> "<" ^ string_of_typ t ^ ">"
+  | List(t) -> "< " ^ string_of_typ t ^ " >"
   
 
 let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ "\n"

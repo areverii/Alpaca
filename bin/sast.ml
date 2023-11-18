@@ -53,7 +53,7 @@ type sstmt =
 let rec string_of_sexpr (t, e) = 
   "(" ^ string_of_typ t ^ " : " ^ (match e with
     SLiteral(l) -> string_of_literal l
-  | SListExpr(exprs) -> String.concat ", " (List.map (string_of_sexpr) exprs)
+  | SListExpr(exprs) -> "[" ^ String.concat ", " (List.map (string_of_sexpr) exprs) ^ "]"
   | SId(s) -> s
   | SBinop(e1, o, e2) ->
       string_of_sexpr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_sexpr e2
