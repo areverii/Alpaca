@@ -25,18 +25,11 @@ type sstmt =
   | SWhile of sexpr * sstmt
   | SSpawn of string * (string * ((string * sexpr) list)) list
 
-  type ssystem_decl = {
-    ssname: string;
-    ssqlist: query list;
-    ssformals: bind list;
-    sslocals: bind list;
-    ssbody: sstmt list;
-  }
-
   type sfunc_decl = {
     styp : typ;
-    sfname : string;
+    sname : string;
     sformals : bind list;
+    sqlist : query list;
     slocals : bind list;
     sbody : sstmt list;
   }
@@ -44,7 +37,6 @@ type sstmt =
   type sprogram = {
     scomponents: comp_decl list;
     sentities: entity_decl list;
-    ssystems: ssystem_decl list;
     sfunctions: sfunc_decl list;
   }
 
@@ -89,23 +81,27 @@ let rec string_of_sstmt = function
       ^ "end\n"
   | SSpawn (s, cs) -> "spawn " ^ s ^ ":" ^ (String.concat "\n" (List.map string_of_scomponent cs)) ^ "end\n"
   
-let string_of_sfdecl fdecl =
-    "function " ^ string_of_typ fdecl.styp ^ " " ^ fdecl.sfname ^ "(" ^
+let string_of_fdecl fdecl =
+    "function " ^ string_of_typ fdecl.styp ^ " " ^ fdecl.sname ^ "(" ^
     String.concat ", " (List.map string_of_fmlsdcl fdecl.sformals) ^
     "):\n" ^
     String.concat "" (List.map string_of_vdecl fdecl.slocals) ^
     String.concat "" (List.map string_of_sstmt fdecl.sbody) ^
     "end\n"
 
-let string_of_ssdecl sdecl =
-      "system " ^ sdecl.ssname ^ "(" ^ String.concat ", " (List.map string_of_fmlsdcl sdecl.ssformals) ^ ")" ^ ":\n" ^
-      String.concat "" (List.map string_of_query sdecl.ssqlist) ^
-      String.concat "" (List.map string_of_vdecl sdecl.sslocals) ^
-      String.concat "" (List.map string_of_sstmt sdecl.ssbody) ^
+let string_of_sdecl sdecl =
+      "system " ^ sdecl.sname ^ "(" ^ String.concat ", " (List.map string_of_fmlsdcl sdecl.sformals) ^ ")" ^ ":\n" ^
+      String.concat "" (List.map string_of_query sdecl.sqlist) ^
+      String.concat "" (List.map string_of_vdecl sdecl.slocals) ^
+      String.concat "" (List.map string_of_sstmt sdecl.sbody) ^
       "end\n"
+
+let string_of_ssfdecls sfdecl =
+  match sfdecl.sqlist with
+    [] -> string_of_fdecl sfdecl
+  | _ -> string_of_sdecl sfdecl
 
 let string_of_sprogram prog =
     String.concat "\n" (List.map string_of_cdecl prog.scomponents) ^ "\n" ^
     String.concat "\n" (List.map string_of_edecl prog.sentities) ^ "\n" ^
-    String.concat "\n" (List.map string_of_ssdecl prog.ssystems) ^ "\n" ^
-    String.concat "\n" (List.map string_of_sfdecl prog.sfunctions)
+    String.concat "\n" (List.map string_of_ssfdecls prog.sfunctions)

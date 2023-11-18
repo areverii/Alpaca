@@ -1,0 +1,68 @@
+component Velocity:
+
+
+
+int x
+
+
+
+
+float y
+
+
+
+
+
+
+
+
+end
+
+
+
+
+entity Ball:
+
+
+
+
+Velocity
+
+
+
+
+
+
+
+end
+
+system sprite_movement():
+
+
+
+
+
+query<a> [Velocity] as entities
+
+
+
+end
+
+
+
+
+
+
+
+
+function void main():
+
+
+int x
+
+
+
+x = 2
+
+
+end

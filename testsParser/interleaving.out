@@ -1,0 +1,32 @@
+component A:
+int x
+float y
+string name
+end
+
+entity B:
+A
+end
+
+function void add(int x, float y):
+return x + y
+end
+
+system system1():
+query<a> [A, B] as queryList
+end
+
+function void main(< string > args):
+float x
+x = add(4, 35.634)
+prints("Starting program")
+system1()
+end
+
+system system2():
+query<a> [A] as queryList
+end
+
+system system3():
+query<a> [B] as queryList
+end

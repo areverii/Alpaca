@@ -76,7 +76,7 @@ let translate program =
    * define its body and call it later *)
   let function_decls : (L.llvalue * sfunc_decl) StringMap.t =
     let function_decl m fdecl =
-      let name = fdecl.sfname
+      let name = fdecl.sname
       and formal_types = 
         Array.of_list (List.map (fun (t,_) -> ltype_of_typ t) fdecl.sformals)
       in let ftype = L.function_type (ltype_of_typ fdecl.styp) formal_types in
@@ -85,7 +85,7 @@ let translate program =
     
   (* Fill in the body of the given function *)
   let build_function_body fdecl =
-    let (the_function, _) = StringMap.find fdecl.sfname function_decls in
+    let (the_function, _) = StringMap.find fdecl.sname function_decls in
     let builder = L.builder_at_end context (L.entry_block the_function) in
 
     let int_format_str = L.build_global_stringptr "%lld\n" "fmt" builder

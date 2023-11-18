@@ -33,6 +33,8 @@ for exe in exes:
         fail = True
 
 if fail:
+    print("Not all tests passed :(")
     sys.exit(1)
 else:
+    print("All tests passed!")
     sys.exit(0)

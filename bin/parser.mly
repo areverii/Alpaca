@@ -31,24 +31,30 @@ open Ast
 
 %%
 program:
-  cdecl_list edecl_list sdecl_list fdecl_list EOF {{
+  cdecl_list edecl_list sfdecl_list EOF {{
     components = List.rev $1;
     entities = List.rev $2;
-    systems = List.rev $3;
-    functions =  List.rev $4;
+    functions =  List.rev $3;
     }}
  
 fdecl:
    FUNCTION typ ID LPAREN formals_opt RPAREN COLON NEWLINE vdecl_list stmt_list END NEWLINE
-     { { typ = $2;
-	 fname = $3;
+     { {
+   typ = $2;
+	 name = $3;
 	 formals = List.rev $5;
 	 locals = List.rev $9;
-	 body = List.rev $10 } }
+	 body = List.rev $10;
+   qlist = [] } }
 
-fdecl_list:
-  /*Nothing */ {[]}
-  | fdecl_list fdecl {$2 :: $1}
+
+sfdecl:
+     fdecl {$1}
+  |  sdecl {$1}
+
+sfdecl_list:
+   /* Nothing */ {[]}
+  | sfdecl_list sfdecl {$2 :: $1}
 
 cdecl:
    COMPONENT ID COLON NEWLINE vdecl_list END NEWLINE
@@ -75,11 +81,12 @@ edecl_list:
 sdecl:
    SYSTEM ID LPAREN formals_opt RPAREN COLON NEWLINE query_list vdecl_list stmt_list END NEWLINE
    { {
-   sname = $2;
+   name = $2;
 	 formals = List.rev $4;
 	 qlist = List.rev $8;
    locals = List.rev $9;
    body = List.rev $10;
+   typ = Void;
    } }
 
 query: 
@@ -93,10 +100,6 @@ query:
 query_list: 
     query            { [$1]     }
   | query_list query { $2 :: $1 } 
-
-sdecl_list:
-  /*Nothing */ {[]}
-  | sdecl_list sdecl {$2 :: $1}
 
 comp_list:
     ID NEWLINE           { [$1]     }

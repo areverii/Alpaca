@@ -34,9 +34,9 @@ let check program  =
   (* Collect function declarations for built-in functions: no bodies *)
   let built_in_decls = 
     let add_bind map (name, ty) = StringMap.add name {
-      typ = Void; fname = name; 
+      typ = Void; name = name; 
       formals = [(ty, "x")];
-      locals = []; body = [] } map
+      locals = []; body = []; qlist = [] } map
     in List.fold_left add_bind StringMap.empty [ ("prints", String);
 			                         ("printb", Bool);
 			                         ("printf", Float);
@@ -45,10 +45,10 @@ let check program  =
 
   (* Add function name to symbol table *)
   let add_func map fd = 
-    let built_in_err = "function " ^ fd.fname ^ " may not be defined"
-    and dup_err = "duplicate function " ^ fd.fname
+    let built_in_err = "function " ^ fd.name ^ " may not be defined"
+    and dup_err = "duplicate function " ^ fd.name
     and make_err er = raise (Failure er)
-    and n = fd.fname (* Name of the function *)
+    and n = fd.name (* Name of the function *)
     in match fd with (* No duplicate functions or redefinitions of built-ins *)
          _ when StringMap.mem n built_in_decls -> make_err built_in_err
        | _ when StringMap.mem n map -> make_err dup_err  
@@ -218,9 +218,10 @@ let check program  =
     in (* body of check_function *)
 
     { styp = func.typ;
-      sfname = func.fname;
+      sname = func.name;
       sformals = formals';
       slocals  = locals';
+      sqlist = func.qlist;
       sbody = match check_stmt (Block func.body) with
             SBlock(sl) -> sl
             | _ -> let err = "internal error: block didn't become a block?"
@@ -230,6 +231,5 @@ let check program  =
   in 
     { scomponents = [];
       sentities = [];
-      ssystems = [];
       sfunctions = List.map check_function program.functions;
     }

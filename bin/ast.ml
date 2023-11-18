@@ -38,42 +38,41 @@ type stmt =
   | While of expr * stmt 
   | Spawn of string * (string * ((string * expr) list)) list
 
-type func_decl = {
+  type comp_decl = {
+    cname: string;
+    members: bind list;
+    }
+    
+  type entity_decl = {
+    ename: string;
+    components: string list;
+  }
+      
+  type query = {
+    tname: string;
+    components: string list;
+    lname: string;
+  }
+        
+  type func_decl = { 
     typ: typ;
-    fname: string;
+    name: string;
     formals: bind list;
+    qlist: query list;
     locals: bind list;
     body: stmt list;
   }
-
-type comp_decl = {
-  cname: string;
-  members: bind list;
-}
-
-type entity_decl = {
-  ename: string;
-  components: string list;
-}
-
-type query = {
-  tname: string;
-  components: string list;
-  lname: string;
-}
-
-type system_decl = {
+(* type system_decl = { 
   sname: string;
   formals: bind list;
   qlist: query list;
   locals: bind list;
   body: stmt list;
-}
+} *)
 
 type program = {
   components: comp_decl list;
   entities: entity_decl list;
-  systems: system_decl list;
   functions: func_decl list;
 }
 
@@ -161,9 +160,8 @@ let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ "\n"
 
 let string_of_fmlsdcl (t, id) = string_of_typ t ^ " " ^ id
 
-
-let string_of_fdecl fdecl =
-  "function " ^ string_of_typ fdecl.typ ^ " " ^ fdecl.fname ^ "(" ^
+let string_of_fdecl fdecl = 
+  "function " ^ string_of_typ fdecl.typ ^ " " ^ fdecl.name ^ "(" ^
   String.concat ", " (List.map string_of_fmlsdcl fdecl.formals) ^
   "):\n" ^
   String.concat "" (List.map string_of_vdecl fdecl.locals) ^
@@ -173,22 +171,24 @@ let string_of_fdecl fdecl =
 let string_of_query qdecl =
   "query<" ^ qdecl.tname ^ "> [" ^ String.concat ", " qdecl.components ^ "] as " ^ qdecl.lname ^ "\n"
 
-
 let string_of_sdecl sdecl =
-  "system " ^ sdecl.sname ^ "(" ^ String.concat ", " (List.map string_of_fmlsdcl sdecl.formals) ^ ")" ^ ":\n" ^
+  "system " ^ sdecl.name ^ "(" ^ String.concat ", " (List.map string_of_fmlsdcl sdecl.formals) ^ ")" ^ ":\n" ^
   String.concat "" (List.map string_of_query sdecl.qlist) ^
   String.concat "" (List.map string_of_vdecl sdecl.locals) ^
   String.concat "" (List.map string_of_stmt sdecl.body) ^
   "end\n"
+
+let string_of_sfdecl sfdecl =
+  match sfdecl.qlist with
+    [] -> string_of_fdecl sfdecl
+  | _ -> string_of_sdecl sfdecl
   
 let string_of_cdecl cdecl = "component " ^ cdecl.cname ^ ":\n" ^ (String.concat "" (List.map string_of_vdecl cdecl.members)) ^ "end\n"
 
 let string_of_edecl edecl =
   "entity " ^ edecl.ename ^ ":\n" ^ (String.concat "\n" edecl.components) ^ "\nend\n"
 
-
 let string_of_program prog =
   String.concat "\n" (List.map string_of_cdecl prog.components) ^ "\n" ^
   String.concat "\n" (List.map string_of_edecl prog.entities) ^ "\n" ^
-  String.concat "\n" (List.map string_of_sdecl prog.systems) ^ "\n" ^
-  String.concat "\n" (List.map string_of_fdecl prog.functions)
+  String.concat "\n" (List.map string_of_sfdecl prog.functions)

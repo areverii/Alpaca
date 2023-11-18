@@ -1,0 +1,22 @@
+component Velocity:
+end
+
+
+function void main():
+if true:
+print("rizz")
+end
+else:
+  print("buzz")
+end
+end
+
+function void moreIfStatements():
+  if true:
+    if true:
+      if true: 
+        print("I made it here")
+      end
+    end
+  end
+end

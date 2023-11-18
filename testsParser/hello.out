@@ -1,0 +1,5 @@
+
+
+function void main():
+print("Hello world.")
+end
