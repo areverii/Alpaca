@@ -1,0 +1,12 @@
+#component does not exist 
+component Name:
+    string name
+end 
+
+entity Person: 
+    Address
+    Name
+end 
+
+function void main(<string> args):
+end

@@ -1,0 +1,7 @@
+function int add(int x, int y):
+    return x+y
+end
+
+function void main(<string> args):
+    add(1.0, 2)
+end

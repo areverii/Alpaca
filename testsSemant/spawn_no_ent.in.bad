@@ -1,0 +1,17 @@
+component Names:
+    <string> names
+end
+
+entity Person:
+    Stats
+    Names
+end
+
+
+function void main(<string> args):
+    spawn Road:
+        Names:
+            names: ["a", "b", "c"]
+        end
+    end
+end

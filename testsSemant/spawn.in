@@ -1,0 +1,29 @@
+component Stats:
+    int age
+    float height
+end
+
+component Names:
+    <string> names
+end
+
+entity Person:
+    Stats
+    Names
+end
+
+
+function void main(<string> args):
+    spawn Person:
+        Stats:
+            age: 20
+            height: 5.8
+        end
+
+        Names:
+            names: ["a", "b", "c"]
+        end
+    end
+end
+
+#Something left: make sure all members are iniatied 

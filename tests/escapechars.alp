@@ -1,0 +1,13 @@
+function void main(<string> args):
+    string x
+    prints("\n")
+    prints("\\")
+    prints("\"")
+    prints("abc\rdef")
+    prints("\t")
+    prints("abc\bd")
+    prints("\"\\\n\\\\\"")
+    
+    x = "\n"
+    prints(x)
+end

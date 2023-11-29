@@ -29,6 +29,65 @@ let check program  =
        in to_check
   in
 
+  (**** Checking Components ****)
+  let add_comp map (cd : comp_decl) = 
+    let dup_err = "duplicate component " ^ cd.cname in
+    let make_err er = raise (Failure er) in
+    let n = cd.cname (* Name of the component *) 
+    in match cd with (* No duplicate components *)
+         _ when StringMap.mem n map -> make_err dup_err  
+       | _ ->  StringMap.add n cd map 
+  in
+
+  (* Collect all component names into a symbol table*)
+  let comp_decls = List.fold_left add_comp StringMap.empty program.components
+  in
+
+  (* Check all component members *)
+  let check_comp (cd : comp_decl) = 
+    let members' = check_binds "member" cd.members in
+    {
+      cname = cd.cname;
+      members = members'
+    }
+  in
+
+  (**** Checking Entities ****)
+  let add_ent map (ed : entity_decl) = 
+    let dup_err = "duplicate entity " ^ ed.ename in
+    let make_err er = raise (Failure er) in
+    let n = ed.ename (* Name of the component *) 
+    in match ed with (* No duplicate entities *)
+         _ when StringMap.mem n map -> make_err dup_err  
+       | _ ->  StringMap.add n ed map 
+  in
+
+  (* Ensure non-duplicate entity declarations *)
+  let ent_decls = List.fold_left add_ent StringMap.empty program.entities
+  in
+
+  (* Ensure component list is valid *)
+  let check_complist checked curr = 
+    let dup_err = "duplicate comp name " ^ curr in
+    let undefined_err = "undefined comp name " ^ curr in
+    let make_err er = raise (Failure er)
+    in match checked with 
+     n1 :: _ when curr = n1 -> raise (Failure dup_err)
+     | _ when StringMap.mem curr comp_decls -> curr :: checked 
+     | _ -> make_err undefined_err
+  in
+
+  (* Check that all components are valid *)
+  let check_ent (ed : entity_decl) = 
+     let components' = List.fold_left check_complist [] (List.sort (fun n1 n2 -> compare n1 n2) ed.components) 
+    in
+    {
+      ename = ed.ename;
+      components = components'
+    }
+  in
+
+
   (**** Checking Functions ****)
 
   (* Collect function declarations for built-in functions: no bodies *)
@@ -77,23 +136,61 @@ let check program  =
 
   let _ = check_main 
   in
+
+  (**** Check entity list names in query ****)
+  let add_query_list_name map (q : query) = 
+    let dup_err = "duplicate query list name " ^ q.lname in
+    let make_err er = raise (Failure er) in
+    let n = q.lname
+    in match n with (* No duplicate components *)
+         _ when StringMap.mem n map -> make_err dup_err  
+       | _ ->  StringMap.add n (List(Entity(q.tname))) map 
+  in
+
+  (* Collect all component names into a symbol table*)
+  let query_list_names = StringMap.empty
+  in
+
+   (**** Check query type names in query ****)
+   let add_query_type map (q : query) = 
+    let dup_err = "duplicate query list type " ^ q.tname in
+    let make_err er = raise (Failure er) in
+    let n = q.tname
+    in match n with (* No duplicate components *)
+         _ when StringMap.mem n map -> make_err dup_err  
+       | _ ->  StringMap.add n q.components map 
+  in
+
+  (* Collect all component names into a symbol table*)
+  let query_types = StringMap.empty
+  in
   
   let check_function (func : func_decl) =
     
     (* Make sure no formals or locals are void or duplicates *)
     let formals' = check_binds "formal" func.formals in
     let locals' = check_binds "local" func.locals in
-
+    
+    let check_query (q : query) = 
+      let components' = List.fold_left check_complist [] (List.sort (fun n1 n2 -> compare n1 n2) q.components) in
+      {
+        tname = q.tname;
+        components = components';
+        lname = q.lname;
+      }
+    in 
+    
+    let query_list_names_map = List.fold_left add_query_list_name query_list_names func.qlist in
+    let query_types = List.fold_left add_query_type query_types func.qlist in
+    let qlist' = List.map check_query func.qlist in
+    let symbols = List.fold_left (fun m (ty, name) -> StringMap.add name ty m)
+	                StringMap.empty (formals' @ locals' @ (StringMap.fold (fun k v accum -> (v, k) :: accum) query_list_names_map []))
+    in
     (* Raise an exception if the given rvalue type cannot be assigned to
        the given lvalue type *)
     let check_assign lvaluet rvaluet err =
        if lvaluet = rvaluet then lvaluet else raise (Failure err)
     in   
-
-    (* Build local symbol table of variables for this function *)
-    let symbols = List.fold_left (fun m (ty, name) -> StringMap.add name ty m)
-	                StringMap.empty (formals' @ locals')
-    in
 
     (* Return a variable from our local symbol table *)
     let type_of_identifier s =
@@ -173,8 +270,51 @@ let check program  =
               List ty -> (ty, SListItem (s, (t, e')))
               | _ -> raise (Failure ("attempting to index non-list " ^ s))
          else raise (Failure "index expression not of type int")
-      | CompMember (ent, comp, field) -> raise (Failure "not implemented")
-      | CompMemberAssign (ent, comp, field, v) -> raise (Failure "not implemented")
+     
+      | CompMember (ent, comp, member) ->
+
+          (* ensure ent is in ent symbol table and retrieve its type*)
+
+        let ret = 
+          try 
+            (match StringMap.find ent symbols with
+              Entity (ty_name ) ->
+                let ent_ty_components = StringMap.find ty_name query_types in
+                if not (List.exists (fun curr -> curr = comp) ent_ty_components)
+                  then raise (Failure ("entity " ^ ent ^ " does not contain component " ^ comp))
+                else 
+                    let comp_rec = StringMap.find comp comp_decls in 
+                    let rec find_member_type = function
+                      [] -> raise (Failure ("component " ^ comp ^ " does not contain member " ^ member))
+                    | (t, m) :: ms -> if m = member then t else find_member_type ms
+                    in (find_member_type comp_rec.members, SCompMember (ent, comp, member))
+              | _ -> raise (Failure ("entity " ^ ent ^ " has not been declared")))
+          with Not_found -> raise (Failure ("undeclared identifier " ^ ent ))
+        in ret
+      | CompMemberAssign (ent, comp, member, e) ->
+          let (ty, e') = expr e in
+          let ret = 
+            try 
+              (* let ent_rec = StringMap.find ent ent_decls in  *)
+              (match StringMap.find ent symbols with
+                Entity (ty_name ) -> 
+                  let ent_ty_components = StringMap.find ty_name query_types in
+                  if not (List.exists (fun curr -> curr = comp) ent_ty_components)
+                    then raise (Failure ("entity " ^ ent ^ " does not contain component " ^ comp))
+                  else 
+                    let comp_rec = StringMap.find comp comp_decls in 
+                    let rec find_member_type = function
+                      [] -> raise (Failure ("component " ^ comp ^ " does not contain member " ^ member))
+                    | (t, m) :: ms -> if m = member then t
+                          else find_member_type ms
+                    in 
+                      let t = find_member_type comp_rec.members in
+                      if ty = t then (ty, SCompMemberAssign(ent, comp, member, (ty, e')))
+                      else raise (Failure ("attempted to assign mismatched type to " ^ member))
+                | _ -> raise (Failure ("entity " ^ ent ^ " has not been declared")))
+            
+            with Not_found -> raise (Failure ("undeclared identifier " ^ ent))
+          in ret
     in
 
      let check_bool_expr e = 
@@ -213,15 +353,73 @@ let check program  =
             | s :: ss         -> check_stmt s :: check_stmt_list ss
             | []              -> []
           in SBlock(check_stmt_list sl)
-      | Spawn (ent, es) -> raise (Failure "spawn not implemented") 
+      | Spawn (ent, comp_assigns) -> 
+          
+        (* 1. Ensure ent exists
+          2. For each component:
+            - ensure comp exists and is in entity 
+            - for each member:
+              - ensure member exists
+              - ensure assignment is valid
 
-    in (* body of check_function *)
+        spawn Ent_Name: 
+
+          comp_name1:
+            x: 23
+            name: "string"
+
+          comp_name2:
+            pi: 23.3
+            done: false
+           
+        *)
+        let check_dups checked (curr, t) = 
+          let dup_err = "duplicate assignment in spawn"
+          in match checked with
+                        (* No duplicate bindings *)
+                          ((n2, _) :: _) when curr = n2 -> raise (Failure dup_err)
+                        | _ -> (curr, t) :: checked
+        in
+
+        let ret =
+          try
+            let ent_rec = StringMap.find ent ent_decls in
+            (*comp = string, assigns = (string * expr) list) *)
+            let check_comp_assign accum (comp, assigns) = 
+              let comp_rec = StringMap.find comp comp_decls in 
+
+              (* Avoid duplicate member assignments *)
+              let _ = List.fold_left check_dups [] (List.sort (fun (n1, _) (n2, _) -> compare n1 n2) assigns) in
+
+              (* check that the component is part of entity *)
+              if not (List.exists (fun curr -> curr = comp) ent_rec.components)
+                then raise (Failure ("entity " ^ ent ^ " does not contain component " ^ comp))
+              else 
+              (* check the member assignments for component*)
+              let check_assigns accum (name, e) =
+                let (ty1, _) = List.find (fun (_, mem) -> name = mem) comp_rec.members in
+                let (ty2, e') = expr e in
+                if ty1 = ty2 then (name, (ty2, e')) :: accum
+                else raise (Failure ("attempted to assign mismatched type to " ^ name))
+                
+              in 
+              (comp, List.fold_left check_assigns [] assigns) :: accum
+            in 
+              let comp_assign_list = List.fold_left check_comp_assign [] comp_assigns in
+
+          
+              (* Avoid duplicate component assignments *)
+              let _ = List.fold_left check_dups [] (List.sort (fun (n1, _) (n2, _) -> compare n1 n2) comp_assigns) 
+          in SSpawn (ent, comp_assign_list)
+        with Not_found -> raise (Failure ("unrecognized entity " ^ ent))
+        in ret
+    in 
 
     { styp = func.typ;
       sname = func.name;
       sformals = formals';
       slocals  = locals';
-      sqlist = func.qlist;
+      sqlist = qlist';
       sbody = match check_stmt (Block func.body) with
             SBlock(sl) -> sl
             | _ -> let err = "internal error: block didn't become a block?"
@@ -229,7 +427,7 @@ let check program  =
     } 
    
   in 
-    { scomponents = [];
-      sentities = [];
+    { scomponents = List.map check_comp program.components;
+      sentities = List.map check_ent program.entities;
       sfunctions = List.map check_function program.functions;
     }

@@ -1,0 +1,8 @@
+component A:
+    int x 
+    float y
+    string name 
+end
+
+function void main(<string> args):
+end

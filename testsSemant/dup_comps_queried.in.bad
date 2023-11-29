@@ -1,0 +1,18 @@
+#duplicate component names in query 
+component Name:
+    string name
+end 
+
+component Stats:
+    int age
+    float height
+end
+
+function void main(<string> args):
+    run() 
+end
+
+system run():
+    query<a> [Name] as names
+    query<a> [Name, Stats, Name] as names
+end

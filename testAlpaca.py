@@ -33,8 +33,10 @@ for exe in exes:
         fail = True
 
 if fail:
-    print("Not all tests passed :(")
+    if len(exes) > 1:
+        print("Not all positive tests passed :(")
     sys.exit(1)
 else:
-    print("All tests passed!")
+    if len(exes) > 1:
+        print("All positive tests passed!")
     sys.exit(0)

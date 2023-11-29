@@ -1,0 +1,25 @@
+component Stats:
+    int age
+    float height
+end
+
+component Names:
+    <string> names
+end
+
+entity Person:
+    Stats
+end
+
+function void main(<string> args):
+    spawn Person:
+        Stats:
+            age: 20
+            height: 5.8
+        end
+
+        Names:
+            names: ["a", "b", "c"]
+        end
+    end
+end

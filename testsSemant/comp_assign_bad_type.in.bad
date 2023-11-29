@@ -1,0 +1,20 @@
+#Bad type assigned to component
+component Stats:
+    int age
+    float height
+end
+
+component Name:
+    string name
+end
+
+entity Person:
+    Stats
+    Name
+end
+
+function void main(<string> args):
+    Person.Stats.age = (2 * (2 + 4))
+    #Person.Stats.height = 32
+    Person.Name.name = Person.Stats.age
+end

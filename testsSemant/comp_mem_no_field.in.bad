@@ -1,0 +1,18 @@
+#component does not have field
+component Stats:
+    int age
+    float height
+end
+
+component Name:
+    string name
+end
+
+entity Person:
+    Stats
+    Name
+end
+
+function void main(<string> args):
+    Person.Stats.length
+end

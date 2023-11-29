@@ -1,0 +1,25 @@
+component Stats:
+    int age
+    float height
+end
+
+component Name:
+    string name
+end
+
+entity Person:
+    Stats
+    Name
+end
+
+function string name():
+    return "hahaha"
+end
+
+function void main(<string> args):
+    string local
+    local = "hi there"
+    Person.Stats.age = (2 * (2 + 4))
+    Person.Name.name = name()
+    Person.Name.name = local
+end

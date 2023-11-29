@@ -1,0 +1,9 @@
+#duplicate component fields 
+component A:
+    float y
+    <string> names 
+    float y
+end
+
+function void main(<string> args):
+end

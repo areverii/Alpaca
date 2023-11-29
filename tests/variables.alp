@@ -1,0 +1,14 @@
+function void main(<string> args):
+    int x
+    string s
+    bool b
+    printi(x)
+    printb(b)
+    prints(s)
+    x = 5
+    printi(x)
+    b = true
+    printb(b)
+    s = "test"
+    prints(s)
+end

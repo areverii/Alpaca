@@ -1,0 +1,6 @@
+function void main(<string> args):
+    printi(5 % 2)
+    printi(-5 % 2)
+    printi(5 % -2)
+    printi(-5 % -2)
+end

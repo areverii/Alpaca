@@ -16,8 +16,17 @@ BUILD THE ALPACA COMPILER
 RUN TEST SUITE:
    make testall
 
-RUNNING A SINGLE SPECIFIED TEST:
+RUNNING A SINGLE SPECIFIED POSITIVE TEST:
    make test_[TESTNAME].exe
+
+RUN SEMANTICALLY NEGATIVE TEST SUITE:
+   ./testAlpacaNegative.py
+
+RUN PARSER TESTS:
+   ./testAlpacaParser.py
+
+After extracting the zip, the .py files may not be executable, resulting in a "Permission Denied" error on many of the above
+commands. Run "chmod +x *.py" to fix this.
 
 GENERATE EXECUTABLES FROM SOURCE FILE NAMES (.alp files):
    make [FILENAME].exe [FILENAME2.exe] ...
@@ -26,18 +35,20 @@ TEST PROGRAM DESCRIPTIONS:
 -- Test files are located in the tests directory. Each test consists of a .alp
    code file and .out reference output file.
 
--- Test cases we have made:
-      - helloworld
-      - simplefuncs
-
-helloworld.alp
-- In a main function, prints the string "Hello World"
-
-simplefuncs.alp
-- In a main function:
-   - Calls a separate function that prints the integer 5000000000
-   - Prints the string "String!"
-   - Prints the float 3.453
+-- List of Integration Tests and descriptions: 
+   escapechars.alp - Tests escape characters
+   funcargs.alp - Tests that function arguments are properly received and used
+   helloworld.alp - In a main function, prints the string "Hello World"
+   modsigns.alp - Tests the modulus operator
+   operators.alp - Tests all operators. These operators include +, -, *, /, %, <, >, <=, >=, ==, !=, and, or, not >>, <<, ^, &, |
+   simplefuncs.alp - Calls a function that prints the int 5000000000 (greater than what fits in a 32 bit int), then main prints "String!" and the float 3.453
+   variables.alp - Tests assigning to variables (int, string, and bool) and checks their initial values
+-- Invalid tests:
+   badcall.alp - Calls a function with an incorrect argument type
+   badvartype_int.alp - Attempts to apply a boolean operator to an int variable
+   main_args_missing.alp - Program with the required "args" argument to the main function missing
+   spawn_bad_assign.alp - Attempts to assign an incorrect type to the member of a component on an entity being spawned
+   system.alp - Declares the same query list name for two queries in a system
 
 TEST SCRIPT VALIDATION:
 Valid code:
@@ -48,10 +59,17 @@ has compiled correctly.
 Invalid code:
 If the source code is invalid, an error is raised in the compilation process 
 (i.e. scanning, parsing, semantically checking the ast, etc). The corresponding 
-.exe file is not built.
+.exe file is not built. The script attempts to compile the .alp file and compare the error
+to the .out file to ensure the correct error was generated.
 
 RUN PARSER
+dune exec alpaca -- -a
+
+RUN SEMANT
 dune exec alpaca -- -s
+
+RUN CODEGEN
+dune exec alpaca -- -c
 
 
 

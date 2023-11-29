@@ -1,0 +1,31 @@
+component Name:
+    string name
+end 
+
+component Stats:
+    int age
+    float height
+end
+
+component Color:
+    string color 
+end 
+
+function void main(<string> args):
+    run() 
+end
+
+system run():
+    query<a> [Name] as names
+    query<b> [Name, Stats, Color] as other
+    entity<a> n
+    entity<b> o
+    
+    for n in names:
+        n.Name.name = "string"
+    end
+
+    for o in other:
+        o.Stats.length = 23.23
+    end
+end

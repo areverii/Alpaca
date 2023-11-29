@@ -5,13 +5,15 @@ CC = gcc
 LLC = llc
 
 .PHONY : all
-all : ./_build/default/bin/microc.exe
+all : ./_build/default/bin/alpaca.exe
 
 # "make test" Compiles everything and runs the regression tests
 
+TESTS = $(wildcard tests/*.alp)
 .PHONY : testall
-testall : tests/helloworld.exe tests/simplefuncs.exe
+testall : $(TESTS:%.alp=%.exe)
 	./testAlpaca.py $^
+	./testAlpacaNegative.py
 
 .PHONY : test_%.exe
 test_%.exe : tests/%.exe
@@ -33,7 +35,7 @@ printbig : printbig.c
 .PHONY : clean
 clean :
 	dune clean
-	rm -rf testall.log *.diff printbig.o microc.opam
+	rm -rf testall.log *.diff printbig.o alpaca.opam
 	rm *.exe tests/*.exe
 
 %.exe: %.alp ./_build/default/bin/alpaca.exe

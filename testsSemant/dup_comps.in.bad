@@ -1,0 +1,13 @@
+#duplicate components 
+component A:
+    int x 
+    float y
+    string name 
+end
+
+component A:
+    float pi 
+end
+
+function void main(<string> args):
+end

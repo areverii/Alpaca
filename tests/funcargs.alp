@@ -1,0 +1,16 @@
+function void add_and_print(int x, int y):
+    # We don't really need an extra variable here but we want to test the vars
+    int z
+    z = x + y
+    printi(z)
+end
+
+function void print_string(string s):
+    prints("In print_string:")
+    prints(s)
+end
+
+function void main(<string> args):
+    add_and_print(3, -4)
+    print_string("test_string")
+end

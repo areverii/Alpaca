@@ -1,0 +1,179 @@
+function void main(<string> args):
+    int x
+
+    prints("1 + 1")
+    printi(1 + 1)
+
+    prints("\n3 - 2")
+    printi(3 - 2)
+
+    prints("\n4 * 4")
+    printi(4 * 4)
+
+    prints("\n10 / 3")
+    printi(10 / 3)
+
+    prints("\n10 % 3")
+    printi(10 % 3)
+
+    prints("\n10 / -2")
+    printi(10 / -2)
+
+    prints("16 >> 1")
+    printi(16 >> 1)
+
+    prints("-16 >> 1")
+    printi(-16 >> 1)
+
+    prints("4 << 2")
+    printi(4 << 2)
+
+    prints("5 & 3")
+    printi(5 & 3)
+
+    prints("5 | 3")
+    printi(5 | 3)
+
+    prints("5 ^ 3")
+    printi(5 ^ 3)
+
+    x = 3
+    prints("-x")
+    printi(-x)
+
+
+
+    prints("3.2 + 1")
+    printf(3.2 + 1)
+
+    prints("1 + 3.2")
+    printf(1 + 3.2)
+
+    prints("3.2 + 3.2")
+    printf(3.2 + 3.2)
+
+
+    
+    prints("3.2 * 1")
+    printf(3.2 * 1)
+
+    prints("1 * 3.2")
+    printf(1 * 3.2)
+
+    prints("3.2 * 3.2")
+    printf(3.2 * 3.2)
+
+
+    
+    prints("3.2 / 1")
+    printf(3.2 / 1)
+
+    prints("10 / 2.5")
+    printf(10 / 2.5)
+
+    prints("3.2 / 3.2")
+    printf(3.2 / 3.2)
+
+
+    
+    prints("true and true")
+    printb(true and true)
+
+    prints("true and false")
+    printb(true and false)
+
+    prints("true or false")
+    printb(true or false)
+
+    prints("not false")
+    printb(not false)
+
+
+    
+    prints("1.0 == 1.0")
+    printb(1.0 == 1.0)
+
+    prints("1.0 != 1.0")
+    printb(1.0 != 1.0)
+
+    prints("1 == 1.0")
+    printb(1 == 1.0)
+
+    prints("1 != 1.0")
+    printb(1 != 1.0)
+
+
+    
+    prints("true == true")
+    printb(true == true)
+
+    prints("true != true")
+    printb(true != true)
+
+    prints("\"test\" == \"test\"")
+    printb("test" == "test")
+
+    prints("\"test\" == \"test1\"")
+    printb("test" == "test1")
+
+    prints("\"test\" != \"test\"")
+    printb("test" != "test")
+
+    prints("\"test\" != \"test1\"")
+    printb("test" != "test1")
+
+    prints("1 == 1")
+    printb(1 == 1)
+
+    prints("1 != 1")
+    printb(1 != 1)
+
+    prints("1 == 2")
+    printb(1 == 2)
+
+    prints("1 != 2")
+    printb(1 != 2)
+
+    prints("1 < 2")
+    printb(1 < 2)
+
+    prints("1 < 1")
+    printb(1 < 1)
+
+    prints("1 <= 2")
+    printb(1 <= 2)
+
+    prints("1 >= 2")
+    printb(1 >= 2)
+
+    prints("2 > 1")
+    printb(2 > 1)
+
+    prints("1 > 2")
+    printb(1 > 2)
+
+    prints("2.1 > 2")
+    printb(2.1 > 2)
+
+    prints("2.1 >= 2")
+    printb(2.1 >= 2)
+
+    prints("2.1 < 2")
+    printb(2.1 < 2)
+
+    prints("2.1 <= 2")
+    printb(2.1 <= 2)
+
+    prints("2.1 <= 2.1")
+    printb(2.1 <= 2.1)
+
+    prints("2.1 >= 2.1")
+    printb(2.1 >= 2.1)
+
+    prints("2.1 == 2.1")
+    printb(2.1 == 2.1)
+
+    prints("2.0 == 2")
+    printb(2.0 == 2)
+
+end
