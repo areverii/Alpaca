@@ -283,6 +283,26 @@ let check program  =
               List et -> (et, SCall("back", [(argt, sarg)]))
             | _ -> raise (Failure "Got non-list argument to back")
         )
+      | Call("append", args) as call ->
+        if List.length args != 2 then
+          raise (Failure ("expecting 2 arguments in " ^ string_of_expr call))
+        else let args' = List.map expr args in
+          (match args' with
+              [(List et, _); (et', _)] when et = et' -> (List et, SCall("append", args'))
+            | [(t1, _); (t2, _)] -> raise (Failure ("Got invalid arguments to append expected (list, elem) found " 
+                                                    ^ string_of_typ t1 ^ ", " ^ string_of_typ t2))
+            | _ -> raise (Failure "Internal error in append args check")
+        )
+      | Call("range", args) as call -> 
+        if List.length args != 2 then
+          raise (Failure ("expecting 2 arguments in " ^ string_of_expr call))
+        else let args' = List.map expr args in
+          (match args' with
+              [(Int, _); (Int, _)] -> (List Int, SCall("range", args'))
+            | [(t1, _); (t2, _)] -> raise (Failure ("Got invalid arguments to range expected (int, int) found " 
+                                                    ^ string_of_typ t1 ^ ", " ^ string_of_typ t2))
+            | _ -> raise (Failure "Internal error in range args check")
+        )
       | Call(fname, args) as call -> 
           let fd = find_func fname in
           let param_length = List.length fd.formals in

@@ -228,8 +228,7 @@ let translate program =
       (* let _ = L.dump_value ret in  *)
       let size_int = L.build_load ( L.build_struct_gep query_strct_ptr 0 "field_ptr" builder) "" builder in 
       let ent_arr = L.build_load (L.build_struct_gep query_strct_ptr 1 "field_ptr" builder) "" builder in
-      let _ = L.dump_value size_int in 
-      let _ = L.dump_value ent_arr in
+      
       (*Create an alpaca array *)
       (* let struct_ty = ltype_of_typ (A.List (Entity curr_query.tname)) in 
       let malloc_result = L.build_malloc struct_ty "mallocResult" builder in
@@ -306,7 +305,6 @@ let translate program =
     Create a new struct with that pointer and size, then return it*)
       let old_len, old_arr_ptr = read_list old_list builder in
       let new_len = L.build_add old_len (L.const_int i64_t 1) "new_len" builder in
-      (* print out new_len*)
       let new_list, new_arr_ptr = new_list new_len et builder in
       (*Perform the copy*)
       let elem_size = L.size_of (ltype_of_typ et) in
@@ -315,14 +313,26 @@ let translate program =
       and cast_new_arr_ptr = L.build_bitcast new_arr_ptr void_ptr_t "cast_new_arr_ptr" builder in
       let _ = L.build_call memcpy_func [| cast_new_arr_ptr; cast_old_arr_ptr; copy_size |] "" builder in
       (*Append the final value*)
-      (* let end_ptr_idx = L.build_mul new_len elem_size "copy_size" builder in  *)
-      let end_ptr = L.build_gep new_arr_ptr [| new_len |] "end_ptr" builder in
+      let end_ptr = L.build_gep new_arr_ptr [| (L.build_sub new_len (L.const_int i64_t 1) "subtract_1_from_end_ptr" builder) |] "end_ptr" builder in
       let _ = L.build_store value end_ptr builder in
       (*Return the struct representing the list with the pointe*)
       new_list
-
     in
-      
+    (*Given a start index and end index, create a list with all values in between exclusive*)
+    let init_range_list start_idx end_idx builder =
+      (*create a new list. Call append_value_to_list and append start_idx each time, 
+    incrementing start_idx by 1 recurisvely until it reaches end_idx. We 
+    return the appended list at that point*)
+      let rec append_range list start_idx end_idx builder =
+        if (L.build_icmp L.Icmp.Eq start_idx end_idx "start_idx_equal_to_end_idx" builder) = (L.const_int i1_t 1) then
+          list
+        else
+          let new_list = append_value_to_list list (A.List Int) start_idx builder in
+          append_range new_list (L.build_add start_idx (L.const_int i64_t 1) "increment_start_idx" builder) end_idx builder
+      in
+      let start_list, _ = new_list (L.const_int i64_t 0) Int builder in
+      append_range start_list start_idx end_idx builder
+    in
     (* Slice a list given the element type, start index, and end index (as llvalues), returning a new list *)
     let slice_list old_list (A.List et) start_idx end_idx builder =
       let _, old_arr_ptr = read_list old_list builder in
@@ -497,12 +507,12 @@ let translate program =
         (match args' with
           [l; value] -> append_value_to_list l (fst (List.hd args)) value builder
         | _ -> raise (Failure "Invalid append call"))
-      (* | SCall ("range", args) -> 
+      | SCall ("range", args) -> 
         let args' = List.map (expr builder) args in
         (match args' with
-          [start_idx; end_idx] ->
+          [start_idx; end_idx] -> init_range_list start_idx end_idx builder
         | _ -> raise (Failure "Invalid range call")
-        ) *)
+        )
       | SCall (f, args) ->
          let (fdef, fdecl) = StringMap.find f function_decls in
 	        let llargs = List.rev (List.map (expr builder) (List.rev args)) in

@@ -1,12 +1,12 @@
 function void main(<string> args):
     <int> x
-    x = [0]
-    x = append(x, 1)
-    x = append(x, 2)
-    x = append(x, 3)
+    x = range(0, 5)
+    prints("length: ")
     printi(len(x))
     printi(x[0])
     printi(x[1])
     printi(x[2])
     printi(x[3])
-end
+    printi(x[4])
+end 
+

@@ -36,8 +36,7 @@ system run():
     entity<a> ent
     int age
 
-    ent 
-    #stats[0]
+    ent = stats[0]
     #age = ent.Stats.age
     #printi(age)
 end

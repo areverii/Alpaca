@@ -88,11 +88,11 @@ entry:
   store { i64, i64*** } { i64 34, i64*** null }, { i64, i64*** }* %tmp_struct_var, align 8
   %arr_field_ptr = getelementptr inbounds { i64, i64*** }, { i64, i64*** }* %tmp_struct_var, i32 0, i32 1
   store i64*** %1, i64**** %arr_field_ptr, align 8
-  %ent2 = load i64**, i64*** %ent, align 8
-  %arr_field_ptr3 = getelementptr inbounds { i64, i64*** }, { i64, i64*** }* %tmp_struct_var, i32 0, i32 1
-  %arr_ptr = load i64***, i64**** %arr_field_ptr3, align 8
-  %element_ptr4 = getelementptr i64**, i64*** %arr_ptr, i64 0
-  %element = load i64**, i64*** %element_ptr4, align 8
+  %arr_field_ptr2 = getelementptr inbounds { i64, i64*** }, { i64, i64*** }* %tmp_struct_var, i32 0, i32 1
+  %arr_ptr = load i64***, i64**** %arr_field_ptr2, align 8
+  %element_ptr3 = getelementptr i64**, i64*** %arr_ptr, i64 0
+  %element = load i64**, i64*** %element_ptr3, align 8
+  store i64** %element, i64*** %ent, align 8
   ret void
 }
 
