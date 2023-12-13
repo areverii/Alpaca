@@ -1,0 +1,12 @@
+function void main(<string> args):
+    <int> x
+    x = [1, 2, 3]
+    printi(x[0])
+    printi(x[1])
+    printi(x[2])
+    append(x, 4)
+    printi(x[3])
+    prints("length:")
+    printi(len(x))
+    
+end

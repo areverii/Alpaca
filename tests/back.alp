@@ -1,0 +1,8 @@
+function void main(<string> args):
+    <int> x
+    <int> y
+    x = [1, 2, 3]
+    y = [1]
+    printi(back(x))
+    printi(back(y))
+end

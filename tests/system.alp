@@ -28,7 +28,7 @@ function void main(<string> args):
         end
     end
 
-    #run()
+    run()
 end
 
 system run():
@@ -36,10 +36,8 @@ system run():
     entity<a> ent
     int age
 
-    ent = stats[0]
-    ent.Stats.age
-    printi(age)
+    ent 
+    #stats[0]
+    #age = ent.Stats.age
+    #printi(age)
 end
-
-#TODO: figure out why line 39 throws error. Big question: is the array stored properly in locals?
-#It seems to work fine if we store the struct pointer instead of struct in locals

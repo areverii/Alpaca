@@ -1,0 +1,8 @@
+function void main(<string> args):
+    int counter
+    counter = 5
+    while counter > 0:
+      printi(counter)
+      counter = counter - 1
+    end
+end

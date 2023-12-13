@@ -1,0 +1,7 @@
+function void main(<string> args):
+    <string> x
+    x = ["one", "two", "three"]
+    prints(x[0])
+    prints(x[1])
+    prints(x[2])
+end

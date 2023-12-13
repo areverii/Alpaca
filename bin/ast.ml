@@ -50,7 +50,7 @@ type stmt =
       
   type query = {
     tname: string;
-    components: string list;
+    qcomponents: string list;
     lname: string;
   }
         
@@ -169,7 +169,7 @@ let string_of_fdecl fdecl =
   "end\n"
 
 let string_of_query qdecl =
-  "query<" ^ qdecl.tname ^ "> [" ^ String.concat ", " qdecl.components ^ "] as " ^ qdecl.lname ^ "\n"
+  "query<" ^ qdecl.tname ^ "> [" ^ String.concat ", " qdecl.qcomponents ^ "] as " ^ qdecl.lname ^ "\n"
 
 let string_of_sdecl sdecl =
   "system " ^ sdecl.name ^ "(" ^ String.concat ", " (List.map string_of_fmlsdcl sdecl.formals) ^ ")" ^ ":\n" ^

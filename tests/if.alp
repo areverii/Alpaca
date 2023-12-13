@@ -1,0 +1,18 @@
+function void main(<string> args):
+    bool x
+    if true:
+        prints("Should print")
+    end
+    if false:
+        prints("Should not print")
+    end
+    if x:
+        prints("Should not print")
+    end
+    else:
+        prints("Should print")
+    end
+    if not x:
+        prints("Should print")
+    end
+end

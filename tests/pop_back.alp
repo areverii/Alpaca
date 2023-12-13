@@ -1,0 +1,9 @@
+function void main(<string> args):
+    <string> x
+    <string> y
+    x = ["a", "b", "c"]
+    y = pop_back(x)
+    printi(len(y))
+    prints(back(y))
+    prints(y[0])
+end

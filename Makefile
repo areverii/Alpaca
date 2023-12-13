@@ -4,6 +4,8 @@
 CC = gcc
 LLC = llc
 
+NATIVE_MODULES = registry.o
+
 .PHONY : all
 all : ./_build/default/bin/alpaca.exe
 
@@ -19,50 +21,36 @@ testall : $(TESTS:%.alp=%.exe)
 test_%.exe : tests/%.exe
 	./testAlpaca.py $<
 
-# "make" will just compile the Alpaca compiler along with printbig.c
+# "make" will just compile the Alpaca compiler
 
 ./_build/default/bin/alpaca.exe : bin/parser.mly bin/scanner.mll bin/codegen.ml bin/semant.ml bin/alpaca.ml
 	dune build
 	touch $@
 
-# "make printbig" compiles the helper C file for the printbig built-in
+# Build rules for native modules
 
-printbig : printbig.c
-	cc -o printbig -DBUILD_TEST printbig.c
+registry.o : registry.c
+	$(CC) -c -o $@ $<
 
 # "make clean" removes all generated files
 
 .PHONY : clean
 clean :
 	dune clean
-	rm -rf testall.log *.diff printbig.o alpaca.opam
-	rm *.exe tests/*.exe
+	rm -rf testall.log *.diff *.o alpaca.opam
+	rm *.exe tests/*.exe *.ll *.s tests/*.ll tests/*.s
 
-%.exe: %.alp ./_build/default/bin/alpaca.exe
-	./_build/default/bin/alpaca.exe -c $< | $(LLC) "-relocation-model=pic" | $(CC) -x assembler -o $@ -
+%.ll: %.alp ./_build/default/bin/alpaca.exe
+	./_build/default/bin/alpaca.exe -c $< > $@
 
+%.s: %.ll
+	$(LLC) "-relocation-model=pic" -o $@ $<
 
-# Building the zip
+%.o: %.s
+	$(CC) -c -x assembler -o $@ $<
 
-TESTS = \
-  add1 arith1 arith2 arith3 fib float1 float2 float3 for1 for2 func1 \
-  func2 func3 func4 func5 func6 func7 func8 func9 gcd2 gcd global1 \
-  global2 global3 hello if1 if2 if3 if4 if5 if6 local1 local2 ops1 \
-  ops2 ops3 printbig var1 var2 while1 while2
+%.exe: %.o $(NATIVE_MODULES)
+	$(CC) -o $@ $< $(NATIVE_MODULES)
 
-FAILS = \
-  assign1 assign2 assign3 dead1 dead2 expr1 expr2 expr3 float1 float2 \
-  for1 for2 for3 for4 for5 func1 func2 func3 func4 func5 func6 func7 \
-  func8 func9 global1 global2 if1 if2 if3 nomain printbig printb print \
-  return1 return2 while1 while2
-
-TESTFILES = $(TESTS:%=test-%.mc) $(TESTS:%=test-%.out) \
-	    $(FAILS:%=fail-%.mc) $(FAILS:%=fail-%.err)
-
-ZIPFILES = bin Dockerfile dune-project lib Makefile \
-	README testall.sh printbig.c \
-	$(TESTFILES:%=tests/%) 
-
-microc.zip : $(ZIPFILES)
-	cd .. && zip -r microc/microc.zip \
-		$(ZIPFILES:%=microc/%)
+# %.exe: %.alp ./_build/default/bin/alpaca.exe $(NATIVE_MODULES)
+# 	./_build/default/bin/alpaca.exe -c $< | $(LLC) "-relocation-model=pic" | $(CC) -x assembler -o $@ - $(NATIVE_MODULES)

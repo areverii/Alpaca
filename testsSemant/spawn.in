@@ -1,29 +1,29 @@
 component Stats:
     int age
     float height
+    string name
 end
 
 component Names:
     <string> names
+    float x
 end
 
 entity Person:
     Stats
-    Names
 end
-
 
 function void main(<string> args):
     spawn Person:
         Stats:
             age: 20
             height: 5.8
+            name: "Phila"
         end
 
-        Names:
-            names: ["a", "b", "c"]
-        end
+        #Names:
+            #names: ["a", "b", "c"]
+            #x: 32.3
+        #end
     end
 end
-
-#Something left: make sure all members are iniatied 

@@ -158,7 +158,7 @@ let check program  =
     let n = q.tname
     in match n with (* No duplicate components *)
          _ when StringMap.mem n map -> make_err dup_err  
-       | _ ->  StringMap.add n q.components map 
+       | _ ->  StringMap.add n q.qcomponents map 
   in
 
   (* Collect all component names into a symbol table*)
@@ -172,10 +172,10 @@ let check program  =
     let locals' = check_binds "local" func.locals in
     
     let check_query (q : query) = 
-      let components' = List.fold_left check_complist [] (List.sort (fun n1 n2 -> compare n1 n2) q.components) in
+      let components' = List.fold_left check_complist [] (List.sort (fun n1 n2 -> compare n1 n2) q.qcomponents) in
       {
         tname = q.tname;
-        components = components';
+        qcomponents = components';
         lname = q.lname;
       }
     in 
@@ -239,6 +239,50 @@ let check program  =
                        string_of_typ t1 ^ " " ^ string_of_op op ^ " " ^
                        string_of_typ t2 ^ " in " ^ string_of_expr e))
           in (ty, SBinop((t1, e1'), op, (t2, e2')))
+      | Call("len", args) as call ->
+        if List.length args != 1 then
+          raise (Failure ("expecting 1 argument in " ^ string_of_expr call))
+        else let (argt, sarg) = expr (List.hd args) in
+          (match argt with
+              List _ -> (Int, SCall("len", [(argt, sarg)]))
+            | _ -> raise (Failure "Got non-list argument to len")
+        )
+      | Call("append", args) as call ->
+        if List.length args != 2 then
+          raise (Failure ("expecting 2 arguments in " ^ string_of_expr call))
+        else let args' = List.map expr args in
+          (match args' with
+              [(List et, _); (et', _)] when et = et' -> (List et, SCall("append", args'))
+            | [(t1, _); (t2, _)] -> raise (Failure ("Got invalid arguments to append expected (list, elem) found " 
+                                                    ^ string_of_typ t1 ^ ", " ^ string_of_typ t2))
+            | _ -> raise (Failure "Internal error in append args check")
+        )
+      | Call("slice", args) as call ->
+        if List.length args != 3 then
+          raise (Failure ("expecting 3 arguments in " ^ string_of_expr call))
+        else let args' = List.map expr args in
+          (match args' with
+              [(List et, _); (Int, _); (Int, _)] -> (List et, SCall("slice", args'))
+            | [(t1, _); (t2, _); (t3, _)] -> raise (Failure ("Got invalid arguments to slice expected (list, int, int) found " 
+                                                    ^ string_of_typ t1 ^ ", " ^ string_of_typ t2 ^ ", " ^ string_of_typ t3))
+            | _ -> raise (Failure "Internal error in slice args check")
+        )
+      | Call("pop_back", args) as call ->
+        if List.length args != 1 then
+          raise (Failure ("expecting 1 argument in " ^ string_of_expr call))
+        else let (argt, sarg) = expr (List.hd args) in
+          (match argt with
+              List _ -> (argt, SCall("pop_back", [(argt, sarg)]))
+            | _ -> raise (Failure "Got non-list argument to pop_back")
+        )
+      | Call("back", args) as call ->
+        if List.length args != 1 then
+          raise (Failure ("expecting 1 argument in " ^ string_of_expr call))
+        else let (argt, sarg) = expr (List.hd args) in
+          (match argt with
+              List et -> (et, SCall("back", [(argt, sarg)]))
+            | _ -> raise (Failure "Got non-list argument to back")
+        )
       | Call(fname, args) as call -> 
           let fd = find_func fname in
           let param_length = List.length fd.formals in
@@ -365,7 +409,7 @@ let check program  =
         spawn Ent_Name: 
 
           comp_name1:
-            x: 23
+            x: 231
             name: "string"
 
           comp_name2:
@@ -384,9 +428,32 @@ let check program  =
         let ret =
           try
             let ent_rec = StringMap.find ent ent_decls in
+            let name_compare n1 n2 = compare n1 n2 in
+            let rec lists_equal list1 list2 =
+              match (list1, list2) with
+              | ([], []) -> true
+              | (h1 :: t1, h2 :: t2) when h1 = h2 -> lists_equal t1 t2
+              | _ -> false
+            in
+            (*Ensure all components are instantiated *)
+            let comp_names = List.map (fun (n, _) -> n) comp_assigns in
+            let sorted_comp_names = List.sort name_compare comp_names in
+            let sorted_ent_comps = List.sort name_compare ent_rec.components in
+            if (not (lists_equal sorted_comp_names sorted_ent_comps))
+              then raise (Failure ("spawn does not instantiate every component of entity " ^ ent_rec.ename))
+            else 
             (*comp = string, assigns = (string * expr) list) *)
             let check_comp_assign accum (comp, assigns) = 
               let comp_rec = StringMap.find comp comp_decls in 
+
+              (*Make sure all members are instantiated*)
+              let mem_names = List.map (fun (n, _) -> n) assigns in
+              let sorted_mem_names = List.sort name_compare mem_names in
+              let sorted_m_comps = List.sort name_compare (List.map (fun (_, n) -> n) comp_rec.members) in
+              let same = lists_equal sorted_m_comps sorted_mem_names in
+              if (not same)
+                then raise (Failure ("spawn does not instantiate every member of one or more components in " ^ ent_rec.ename))
+              else
 
               (* Avoid duplicate member assignments *)
               let _ = List.fold_left check_dups [] (List.sort (fun (n1, _) (n2, _) -> compare n1 n2) assigns) in
@@ -395,7 +462,7 @@ let check program  =
               if not (List.exists (fun curr -> curr = comp) ent_rec.components)
                 then raise (Failure ("entity " ^ ent ^ " does not contain component " ^ comp))
               else 
-              (* check the member assignments for component*)
+              (* check the member assignment types for component*)
               let check_assigns accum (name, e) =
                 let (ty1, _) = List.find (fun (_, mem) -> name = mem) comp_rec.members in
                 let (ty2, e') = expr e in
@@ -431,3 +498,6 @@ let check program  =
       sentities = List.map check_ent program.entities;
       sfunctions = List.map check_function program.functions;
     }
+
+
+(*TODO: in a spawn, ensure that the members appear in the same order as the component declaration *)

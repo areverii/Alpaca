@@ -1,0 +1,17 @@
+function int f(int x):
+    return x + 1
+end
+
+function float g(float x):
+    return x/2
+end
+
+function string h():
+    return "Test String"
+end
+
+function void main(<string> args):
+    printi(f(2))
+    printf(g(5.0))
+    prints(h())
+end

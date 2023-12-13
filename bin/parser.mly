@@ -94,7 +94,7 @@ query:
   { {
   tname = $3;
   lname = $9;
-  components = List.rev $6;
+  qcomponents = List.rev $6;
   } }
 
 query_list: 
