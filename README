@@ -46,6 +46,37 @@ TEST PROGRAM DESCRIPTIONS:
    addition.in - Alpaca program with components and addition operations
    complicated.in - multiple components, systems, and entities
    expressionNoFunction.in.bad - a file with a single variable and no main
+   extralines.in - program with a lot of whitespace. should not affect program
+   fail_entity.in.bad - empty entity declaration 
+   forLoop.in - write a for loop test
+   hello.in - print hello world
+   ifStatements.in - a bunch of nested if statements 
+   incorrectSyntax.in.bad - old system syntax and uses curly braces 
+   interlaving.out.bad - mixes functions and system
+   missingEnds.in.bad - function and for loop block missing end keyword
+   multipleQueries.in - system with two queries in it
+-- List of Unit Tests for semantic checker:
+   comp_assign_bad_type.in.bad - assigns an int to a string component
+   comp_assign_exists_non.in.bad - assigns to non existent entity
+   comp_assign.in - valid component assignment 
+   comp_mem_no_comp.in - assigns a member of a non-existent component
+   comp_mem_no_ent - entity does not exist. Was never defined
+   comp_mem_no_field - assigns to non existent field of component
+   comp_mem - valid query and assignment to an entity
+   component.in - simple component declaration
+   dup_comp_fields - duplicate members in a component
+   dup_comps_queried - duplicate components in a query
+   dup_comps - duplicate component declaration
+   dup_ents - duplicate entity declaration
+   entities.in - simple entity and component declaration
+   no_ent - attempts to define an entity type using a component that does not exist
+   query_undefined_components - attempts to query a component that does not exist.
+   spawn_dup_assigns - attempts to assign to the same comp member twice
+   spawn_no_ent_comp - attempts to spawn an entity with a component not part of that entity type
+   spawn_no_ent - attempts to spawn an entity name that does not exist
+   spawn_no_member - adds an extra member when performing a spawn
+   spawn - checks that semantic checking passes on a spawn using several different types
+   system - an example of a valid system
 -- List of Integration Tests and descriptions: 
    append.alp - Tests the append standard library function
    back.alp - Tests the back standard library function
