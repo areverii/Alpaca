@@ -13,6 +13,22 @@ entity Person:
 end
 
 function void main(<string> args):
-    Person.Stats.age
-    Person.Name.name
+    spawn Person:
+        Stats:
+            age: 20
+            height: 5.8
+        end
+        Name:
+            name: "John"
+        end
+    end
+    readEntityNames()
+end
+
+system readEntityNames():
+    query<a> [Stats, Name] as people
+    entity<a> p
+    p = people[0]
+    p.Stats.age
+    p.Name.name
 end

@@ -3,3 +3,4 @@ _build/
 *.exe
 alpaca.zip
 Alpaca.zip
+*.o

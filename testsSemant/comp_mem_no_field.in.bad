@@ -1,18 +1,42 @@
-#component does not have field
+component Name:
+    string name
+end 
+
 component Stats:
     int age
     float height
 end
 
-component Name:
-    string name
-end
+component Color:
+    string color 
+end 
 
 entity Person:
+    Name 
     Stats
-    Name
 end
 
 function void main(<string> args):
-    Person.Stats.length
+    spawn Person:
+        Name:
+            name: "Nick"
+        end 
+
+        Stats:
+            age: 21
+            height: 6.1
+        end
+    end
+
+    #run()
+end
+
+system run():
+    query<a> [Stats] as stats
+    entity<a> ent
+    int age
+
+    ent = stats[0]
+    # length field does not exist in the Stats component
+    ent.Stats.length = 5
 end

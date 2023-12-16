@@ -1,4 +1,4 @@
-#entity does not exist
+#Bad type assigned to component
 component Stats:
     int age
     float height
@@ -14,5 +14,16 @@ entity Person:
 end
 
 function void main(<string> args):
-    Random.Color.color
+    # entity Color does not exist
+    spawn Color:
+        Stats:
+            age: 20
+            height: 5.8
+        end
+        Name:
+            name: "John"
+        end
+    end
 end
+
+

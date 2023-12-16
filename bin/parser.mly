@@ -1,5 +1,11 @@
 /* Ocamlyacc parser for Alpaca */
-
+/*
+Authors: 
+Elliot Bonner
+Phila Dlamini
+Nathan Solomon
+Nicholas Woodward
+*/
 %{
 open Ast
 %}
@@ -38,7 +44,7 @@ program:
     }}
  
 fdecl:
-   FUNCTION typ ID LPAREN formals_opt RPAREN COLON NEWLINE vdecl_list stmt_list END NEWLINE
+   FUNCTION typ ID LPAREN formals_opt RPAREN COLON NEWLINE vdecl_list stmt_list END option(NEWLINE)
      { {
    typ = $2;
 	 name = $3;

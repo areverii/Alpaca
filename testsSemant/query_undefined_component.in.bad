@@ -1,4 +1,3 @@
-#queried component does not exist
 component Name:
     string name
 end 
@@ -8,6 +7,6 @@ function void main(<string> args):
 end
 
 system run():
-    query<a> [Name] as names
-    query<a> [Name, Stats, Stats] as names
+    #queried component Stats does not exist
+    query<a> [Name, Stats] as names
 end

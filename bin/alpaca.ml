@@ -1,3 +1,10 @@
+(*
+Authors: 
+Elliot Bonner
+Phila Dlamini
+Nathan Solomon
+Nicholas Woodward
+*)
 (* Top-level of the alpaca compiler: scan & parse the input,
    check the resulting AST and generate an SAST from it, generate LLVM IR,
    and dump the module *)

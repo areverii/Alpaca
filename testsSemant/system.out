@@ -1,0 +1,36 @@
+component Name:
+string name
+end
+
+component Stats:
+int age
+float height
+end
+
+component Color:
+string color
+end
+
+entity Person:
+Stats
+Name
+end
+
+function void main(< string > args):
+spawn Person:Stats:
+age: (int : 21)
+height: (float : 6.1)end
+
+Name:
+name: (string : "Nick")end
+end
+end
+
+system run():
+query<a> [Stats] as stats
+entity<a> ent
+int age
+(entity<a> : ent = (entity<a> : stats[(int : 0)]))
+(int : ent.Stats.age)
+(void : printi((int : age)))
+end

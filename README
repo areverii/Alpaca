@@ -10,6 +10,11 @@ Alpaca ˙ᵕ˙
       ˚₊·—̳͟͞͞♡   Nathan Solomon - nathan.solomon@tufts.edu
 ✧˖°.˖✧˖°.˖✧˖°.˖✧˖°.˖✧˖°.˖✧˖°.˖✧˖°.˖✧˖°.˖✧˖°.˖✧˖°.˖✧˖°.˖✧˖°.˖
 
+RUNNING DEMOS
+from alpaca folder, call
+   make ../demos/[demo_name].exe
+   ../demos/[demo_name].exe
+   
 BUILD THE ALPACA COMPILER
    make all
 
@@ -25,6 +30,8 @@ RUN SEMANTICALLY NEGATIVE TEST SUITE:
 RUN PARSER TESTS:
    ./testAlpacaParser.py
 
+RUN SEMANTIC CHECKER TESTS:
+   ./testAlpacaSemant.py
 After extracting the zip, the .py files may not be executable, resulting in a "Permission Denied" error on many of the above
 commands. Run "chmod +x *.py" to fix this.
 
@@ -35,14 +42,30 @@ TEST PROGRAM DESCRIPTIONS:
 -- Test files are located in the tests directory. Each test consists of a .alp
    code file and .out reference output file.
 
+-- List of Unit Tests for scanner and parser:
+   addition.in - Alpaca program with components and addition operations
+   complicated.in - multiple components, systems, and entities
+   expressionNoFunction.in.bad - a file with a single variable and no main
 -- List of Integration Tests and descriptions: 
+   append.alp - Tests the append standard library function
+   back.alp - Tests the back standard library function
    escapechars.alp - Tests escape characters
+   factorial.alp - Tests recursive functions
+   for.alp - Tests a simple for loop
    funcargs.alp - Tests that function arguments are properly received and used
    helloworld.alp - In a main function, prints the string "Hello World"
+   if.alp - Tests simple if and if else statements
+   len.alp - Tests the len standard library function
+   listbasics.alp - Tests list exspressions and indexing
    modsigns.alp - Tests the modulus operator
    operators.alp - Tests all operators. These operators include +, -, *, /, %, <, >, <=, >=, ==, !=, and, or, not >>, <<, ^, &, |
+   pop_back.alp - Tests the pop_back standard library function
    simplefuncs.alp - Calls a function that prints the int 5000000000 (greater than what fits in a 32 bit int), then main prints "String!" and the float 3.453
+   slice.alp - Tests the slice standard library function
+   system.alp - Tests basic use of entities, components, and systems
    variables.alp - Tests assigning to variables (int, string, and bool) and checks their initial values
+   while-system.alp - Tests a while in a system working with enitities
+   while.alp - Tests a simple while loop
 -- Invalid tests:
    badcall.alp - Calls a function with an incorrect argument type
    badvartype_int.alp - Attempts to apply a boolean operator to an int variable

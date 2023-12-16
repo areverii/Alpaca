@@ -1,3 +1,10 @@
+(*
+Authors: 
+Elliot Bonner
+Phila Dlamini
+Nathan Solomon
+Nicholas Woodward
+*)
 (* Abstract Syntax Tree and functions for printing it *)
 
 type binop = Add | Sub | Mult | Div | Mod | ShiftR | ShiftL |

@@ -12,19 +12,70 @@ component Color:
 end 
 
 entity Person:
-    Name 
     Stats
+    Name
+end
+
+entity Circle: 
+    Color
 end
 
 function void main(<string> args):
     spawn Person:
-        Name:
-            name: "Nick"
-        end 
+        Stats:
+            age: 22
+            height: 5.8
+        end
 
+        Name:
+            name: "Phila"
+        end
+    end
+
+    spawn Person:
         Stats:
             age: 21
-            height: 6.1
+            height: 6.5
+        end
+
+        Name:
+            name: "Nick"
+        end
+    end
+
+    spawn Circle:
+        Color:
+            color: "Red"
+        end
+    end
+
+     spawn Circle:
+        Color:
+            color: "Blue"
+        end
+    end
+
+     spawn Circle:
+        Color:
+            color: "Green"
+        end
+    end
+
+    spawn Circle:
+        Color:
+            color: "Purple"
+        end
+    end
+
+     spawn Circle:
+        Color:
+            color: "Pink"
+        end
+    end
+
+     spawn Circle:
+        Color:
+            color: "Black"
         end
     end
 
@@ -32,11 +83,28 @@ function void main(<string> args):
 end
 
 system run():
-    query<a> [Stats] as stats
-    entity<a> ent
-    int age
+    query<a> [Stats, Name] as people
+    query<b> [Color] as colored
+    entity<a> person1
+    entity<a> person2
+    entity<b> color1
+    entity<b> color3
+    int curr
+    int l
+    
+    person1 = people[0]
+    person2 = people[1]
+    color1 = colored[0]
+    color3 = colored[2]
 
-    ent = stats[0]
-    #age = ent.Stats.age
-    #printi(age)
+    printi(person1.Stats.age)
+    printf(person2.Stats.height)
+    prints(person1.Name.name)
+    prints(color3.Color.color)
+
+    #Change them 
+    color3.Color.color = "Some random color lol ahahhaa you thought you ate"
+    prints(color3.Color.color)
+
+
 end

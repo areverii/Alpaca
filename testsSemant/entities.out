@@ -1,0 +1,16 @@
+component Name:
+string name
+end
+
+component Stats:
+int age
+float height
+end
+
+entity Person:
+Stats
+Name
+end
+
+function void main(< string > args):
+end

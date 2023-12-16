@@ -1,4 +1,3 @@
-#entity does not have the component
 component Stats:
     int age
     float height
@@ -14,5 +13,22 @@ entity Person:
 end
 
 function void main(<string> args):
-    Person.Color.color
+    spawn Person:
+        Stats:
+            age: 20
+            height: 5.8
+        end
+        Name:
+            name: "John"
+        end
+    end
+    readEntityNames()
+end
+
+system readEntityNames():
+    query<a> [Stats, Name] as people
+    entity<a> p
+    p = people[0]
+    # Color component does not exist
+    p.Color.color = "red"
 end

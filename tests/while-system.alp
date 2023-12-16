@@ -1,0 +1,84 @@
+component Name:
+    string name
+end 
+
+component Stats:
+    int age
+    float height
+end 
+
+component Color: 
+    string color 
+end
+
+entity Person:
+    Stats
+    Name
+end    
+
+entity Circle: 
+    Color 
+end
+
+function void main(<string> args):
+    spawn Person:
+        Stats:
+            age: 22
+            height: 5.8
+        end
+
+        Name:
+            name: "Phila"
+        end
+    end
+
+    spawn Circle:
+        Color:
+            color: "RED"
+        end
+    end
+
+    spawn Circle:
+            Color:
+                color: "blue"
+            end
+        end
+
+    spawn Circle:
+            Color:
+                color: "purple"
+            end
+        end
+
+    spawn Person:
+        Stats:
+            age: 21
+            height: 6.5
+        end
+
+        Name:
+            name: "Nick"
+        end
+    end
+
+    run()
+end
+
+system run():
+    query<a> [Stats, Name] as people
+    query<b> [Color] as colored
+    entity<a> person
+    entity<b> color
+    int i
+
+    for person in people:
+        printi(person.Stats.age)
+        printf(person.Stats.height)
+        prints(person.Name.name)
+    end
+    
+    for i in range(0, 2):
+        printi(i)
+    end
+
+end

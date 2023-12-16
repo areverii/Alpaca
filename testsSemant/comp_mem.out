@@ -1,0 +1,32 @@
+component Stats:
+int age
+float height
+end
+
+component Name:
+string name
+end
+
+entity Person:
+Stats
+Name
+end
+
+function void main(< string > args):
+spawn Person:Name:
+name: (string : "John")end
+
+Stats:
+age: (int : 20)
+height: (float : 5.8)end
+end
+(void : readEntityNames())
+end
+
+system readEntityNames():
+query<a> [Stats, Name] as people
+entity<a> p
+(entity<a> : p = (entity<a> : people[(int : 0)]))
+(int : p.Stats.age)
+(string : p.Name.name)
+end

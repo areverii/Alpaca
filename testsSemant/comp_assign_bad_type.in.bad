@@ -14,7 +14,24 @@ entity Person:
 end
 
 function void main(<string> args):
-    Person.Stats.age = (2 * (2 + 4))
-    #Person.Stats.height = 32
-    Person.Name.name = Person.Stats.age
+    spawn Person:
+        Stats:
+            age: 20
+            height: 5.8
+        end
+        Name:
+            name: "John"
+        end
+    end
+    readEntityNames()
 end
+
+system readEntityNames():
+    query<a> [Stats, Name] as people
+    entity<a> p
+    p = people[0]
+    p.Stats.age = (2 * (2 + 4))
+    # assigning an int to a string. Not allowed
+    p.Name.name = p.Stats.age
+end
+

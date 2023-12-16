@@ -1,6 +1,7 @@
 function void main(<string> args):
-  int i
-  for i in range(0, 10):
-    printi(i)
+  string z 
+
+  for z in ["a", "b", "c"]:
+    prints(z)
   end
 end

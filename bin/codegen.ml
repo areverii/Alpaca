@@ -1,3 +1,10 @@
+(*
+Authors: 
+Elliot Bonner
+Phila Dlamini
+Nathan Solomon
+Nicholas Woodward
+*)
 (* Code generation: translate takes a semantically checked AST and
 Produces LLVM IR
 
@@ -34,7 +41,7 @@ let translate program =
   and float_t    = L.double_type context
   and void_t     = L.void_type   context 
   and char_ptr_t = L.pointer_type (L.i8_type context) 
-  and void_ptr_t = L.pointer_type (L.i64_type context) 
+  and void_ptr_t = L.pointer_type (L.i8_type context) 
 
   (* Create an LLVM module -- this is a "container" into which we'll 
     generate actual code *) 
@@ -85,11 +92,11 @@ let translate program =
   let printf_func : L.llvalue = 
       L.declare_function "printf" printf_t the_module in
 
-  let stderr_global = L.declare_global void_ptr_t "stderr" the_module in
+  (* let stderr_global = L.declare_global void_ptr_t "stderr" the_module in
   let fprintf_t : L.lltype = 
       L.var_arg_function_type i32_t [| void_ptr_t; L.pointer_type i8_t |] in
   let fprintf_func : L.llvalue = 
-      L.declare_function "fprintf" fprintf_t the_module in
+      L.declare_function "fprintf" fprintf_t the_module in *)
 
   (*TODO: how to fix the issue where void_t as a return type causes issues?*)
   let registry_init_t : L.lltype = L.function_type void_t [| |] in
@@ -101,10 +108,10 @@ let translate program =
   let registry_query_t : L.lltype = L.function_type (L.pointer_type query_struct_typ) [| L.pointer_type i64_t ; i64_t|] in
   let registry_query_func : L.llvalue = L.declare_function "reg_query" registry_query_t the_module in
   
-  let exit_t : L.lltype = 
+  (* let exit_t : L.lltype = 
       L.function_type void_t [| i32_t |] in
   let exit_func : L.llvalue = 
-      L.declare_function "exit" exit_t the_module in
+      L.declare_function "exit" exit_t the_module in *)
   
   let memcpy_t : L.lltype = 
       L.function_type void_t [| void_ptr_t; void_ptr_t; i64_t |] in
@@ -137,7 +144,7 @@ let translate program =
   let build_comp_struct map scomp = 
     let types_arr = List.map (fun (ty, _) -> ltype_of_typ ty) scomp.members in
     let struct_type = L.named_struct_type context scomp.cname in
-    L.struct_set_body struct_type (Array.of_list (List.rev types_arr)) false; (*TODO: should this reversal be happening elsewhere? *)
+    L.struct_set_body struct_type (Array.of_list types_arr) false; (*TODO: should this reversal be happening elsewhere? *)
     StringMap.add scomp.cname struct_type map in
     
   (* Assign each component a numeric identifier*)
@@ -214,50 +221,40 @@ let translate program =
       (* let _ = print_endline ("num of comp ids " ^ (string_of_int (List.length ids))) in *)
       let comp_arr = L.build_array_alloca i64_t comp_ids_len  "comp_arr_heap" builder in
       (* let _ = print_endline "about to allocate comp_ids arr" in *)
+
+      (* Create the array of component indices to pass into reg_query *)
       let rec put ls arr index = match ls with 
         [] -> arr 
         | x :: xs -> 
-            let idx = L.const_int i32_t index in 
+            let idx = L.const_int i64_t index in 
             let value = L.const_int i64_t x in 
             let _ = L.build_store value (L.build_gep arr [| idx |] "element_ptr" builder) builder in
             put xs arr (index + 1) in
 
       let init_comp_arr = put ids comp_arr 0 in  
       let query_strct_ptr = L.build_call registry_query_func [| init_comp_arr; comp_ids_len|] "registry_query" builder in
-
+(* 
       (* let _ = L.dump_value ret in  *)
       let size_int = L.build_load ( L.build_struct_gep query_strct_ptr 0 "field_ptr" builder) "" builder in 
       let ent_arr = L.build_load (L.build_struct_gep query_strct_ptr 1 "field_ptr" builder) "" builder in
-      
-      (*Create an alpaca array *)
-      (* let struct_ty = ltype_of_typ (A.List (Entity curr_query.tname)) in 
-      let malloc_result = L.build_malloc struct_ty "mallocResult" builder in
-      let struct_ptr = L.build_bitcast malloc_result (L.pointer_type struct_ty) "struct_ptr" builder in
-    
-      (*init alpaca array*)
-      let size_ptr = L.build_struct_gep struct_ptr 0 "field_ptr" builder in
-      let arr_ptr = L.build_struct_gep struct_ptr 1 "field_ptr" builder in
-      let _ = L.build_store size_int size_ptr builder in
-      let _ = L.build_store ent_val arr_ptr builder in
-
-      (*Put arr in locals *)
-      let actual_struct = L.build_load struct_ptr "" builder in 
-      let _ = print_endline ("listname is " ^ curr_query.lname) in  *)
 
       (*Switched to allocating struct on the stack. Issues later?*)
       let struct_typ = ltype_of_typ (A.List (Entity curr_query.tname)) in
       (* struct_instance *)
-      let tmp_struct = L.const_named_struct struct_typ [| L.const_int i64_t 34; L.const_pointer_null ( L.pointer_type (ltype_of_typ (Entity curr_query.tname)))|] in
+      (* let tmp_struct = L.const_named_struct struct_typ [| size_int; L.const_pointer_null ( L.pointer_type (ltype_of_typ (Entity curr_query.tname)))|] in *)
       (* allocate space for a struct_typ variable on the stack *)
       let tmp_struct_ptr = L.build_alloca struct_typ "tmp_struct_var" builder in
       (* Store the initial constant initialized struct in the allocated space *)
-      let _ = L.build_store tmp_struct tmp_struct_ptr builder in
+      (* let _ = L.build_store tmp_struct tmp_struct_ptr builder in *)
+      let len_field_ptr = L.build_struct_gep tmp_struct_ptr 0 "len_field_ptr" builder in
       let arr_field_ptr = L.build_struct_gep tmp_struct_ptr 1 "arr_field_ptr" builder in
       let _ = L.build_store ent_arr arr_field_ptr builder in 
+      let _ = L.build_store size_int len_field_ptr builder in  *)
+
       (* Load the final modified struct and return it (return value is the struct itself, NOT a pointer to a struct)
       let _ = L.build_load tmp_struct_ptr "load_tmp_struct" builder in *)
 
-      StringMap.add curr_query.lname tmp_struct_ptr map in
+      StringMap.add curr_query.lname query_strct_ptr map in
       (*TODO: compiles but is it CORRECT?! *)
 
     (* Add all query lists to locals *)
@@ -268,14 +265,14 @@ let translate program =
     in
 
     (* Returns a basic block that prints a message to strerr and exits the program *)
-    let build_runtime_error_block err_msg =
+    (* let build_runtime_error_block err_msg =
       let error_bb = L.append_block context "error" the_function in  
       let builder = L.builder_at_end context error_bb in
       let message_str = L.build_global_stringptr err_msg "message" builder in
       ignore (L.build_call fprintf_func [| stderr_global; string_format_str; message_str |] "" builder);
       ignore (L.build_call exit_func [| L.const_int i32_t 1 |] "" builder);
       error_bb
-    in
+    in *)
 
     (* Given a list llvalue (i.e. a list struct), returns the length and the pointer to the heap block *)
     let read_list list builder =
@@ -299,10 +296,13 @@ let translate program =
     in
     (*Given a list pointer and a value, copy the data to a new list and append 
       the value to the new list. Return the new list struct*)
-    let append_value_to_list old_list (A.List et) value builder =
+    let append_value_to_list old_list typ value builder =
       (*Get the pointer and length of the old list. Copy the data from the old 
     into a new list that has + 1 memory and append value to that location. 
     Create a new struct with that pointer and size, then return it*)
+      let et = match typ with 
+        A.List et -> et
+      | _ -> raise (Failure "append_value_to_list did not get a list") in
       let old_len, old_arr_ptr = read_list old_list builder in
       let new_len = L.build_add old_len (L.const_int i64_t 1) "new_len" builder in
       let new_list, new_arr_ptr = new_list new_len et builder in
@@ -333,8 +333,11 @@ let translate program =
       let start_list, _ = new_list (L.const_int i64_t 0) Int builder in
       append_range start_list start_idx end_idx builder
     in
-    (* Slice a list given the element type, start index, and end index (as llvalues), returning a new list *)
-    let slice_list old_list (A.List et) start_idx end_idx builder =
+    (* Slice a list given the list type, start index, and end index (as llvalues), returning a new list *)
+    let slice_list old_list typ start_idx end_idx builder =
+      let et = match typ with 
+        A.List et -> et
+      | _ -> raise (Failure "append_value_to_list did not get a list") in
       let _, old_arr_ptr = read_list old_list builder in
       let new_len = L.build_sub end_idx start_idx "new_len" builder in
       let start_ptr = L.build_gep old_arr_ptr [| start_idx |] "start_ptr" builder in
@@ -346,7 +349,21 @@ let translate program =
       let _ = L.build_call memcpy_func [| cast_new_arr_ptr; cast_start_ptr; copy_size |] "" builder in
       new_list
     in
-
+    
+    (* Given an entity name and member, return the pointer to the element you 
+       are looking for *)
+    let get_ent_member_ptr ent_name comp member builder =
+      let ent_ptr = lookup ent_name in (*pointer to entity*)
+      let index = StringMap.find comp comp_ids in 
+      let struct_ty = StringMap.find comp struct_types in
+      let actual_ent = L.build_load ent_ptr "entity" builder in 
+      let comp_ptr = L.build_gep actual_ent [| L.const_int i64_t index |] "element_ptr" builder in
+      let ent_struct_ptr = L.build_bitcast comp_ptr (L.pointer_type (L.pointer_type struct_ty)) "ent_struct_ptr" builder in
+      let struct_ptr = L.build_load ent_struct_ptr "struct_ptr" builder in
+      let member_index = StringMap.find (comp ^ ":" ^ member) comp_member_ids in
+      L.build_struct_gep struct_ptr member_index "field_ptr" builder
+    in 
+    
     (* Construct code for an expression; return its value *)
     (* let _ = print_endline "before expr" in *)
     let rec expr builder ((_, e) : sexpr) = match e with
@@ -359,32 +376,12 @@ let translate program =
       | SAssign (s, e) -> let e' = expr builder e in
                           let _  = L.build_store e' (lookup s) builder in e'
       | SCompMember (ent_name, comp, member) -> 
-        let ent_ptr = lookup ent_name in (*pointer to entityt??*)
-        (* let _ = if L.is_null ent_ptr then print_endline "ent arr is null!" in
-        let _ = L.dump_value ent_ptr in
-        let _ = print_endline "retreived ent_arr " in  *)
-        let index = StringMap.find comp comp_ids in 
-        (* let _ = print_endline ("index of comp " ^ comp ^ " is " ^ string_of_int index) in  *)
-        let struct_ty = StringMap.find comp struct_types in
-        (* let _ = L.dump_type struct_ty in  *)
-        (* let _ = print_endline "found struct_ty in map " in  *)
-        let comp_ptr = L.build_gep ent_ptr [| L.const_int i64_t index |] "element_ptr" builder in
-        (* let _ = print_endline "got component is ent arr " in *)
-        let struct_ptr = L.build_bitcast comp_ptr (L.pointer_type struct_ty) "void_ptr" builder in
-
-        let member_index = StringMap.find (comp ^ ":" ^ member) comp_member_ids in
-        let member_ptr = L.build_struct_gep struct_ptr member_index "field_ptr" builder in
+        let member_ptr = get_ent_member_ptr ent_name comp member builder in 
         L.build_load member_ptr "loaded_value" builder  
       | SCompMemberAssign (ent_name, comp, member, e) -> 
-        let e' = expr builder e in
-        let ent_ptr = lookup ent_name in
-        let index = StringMap.find comp comp_ids in 
-        let struct_ty = StringMap.find comp struct_types in
-        let comp_ptr = L.build_gep ent_ptr [| L.const_int i64_t index |] "element_ptr" builder in
-        let struct_ptr = L.build_bitcast comp_ptr (L.pointer_type struct_ty) "void_ptr" builder in
-        let member_index = StringMap.find (comp ^ ":" ^ member) comp_member_ids in
-        let member_ptr = L.build_struct_gep struct_ptr member_index "field_ptr" builder in
-         L.build_store e' member_ptr builder  
+        let e' = expr builder e
+        and member_ptr = get_ent_member_ptr ent_name comp member builder in
+        ignore (L.build_store e' member_ptr builder); e'
       | SListExpr (es) ->
           let vs = (List.map (expr builder) es)
           and typ = fst (List.hd es) in
@@ -586,7 +583,6 @@ let translate program =
 	        let pred_bb = L.append_block context "while" the_function in
           (* In current block, branch to predicate to execute the condition *)
 	        let _ = L.build_br pred_bb builder in
-
           (* Create the body's block, generate the code for it, and add a branch
           back to the predicate block (we always jump back at the end of a while
           loop's body, unless we returned or something) *)
@@ -605,34 +601,28 @@ let translate program =
 
         (* string * (string * ((string * sexpr) list)) list)*)
         |  SSpawn (_, comp_assigns) ->
-            (* NOTE: If member access does not work it is likely because regular values are being
-               stored in the field pointers rather than being pointed to *)
-
+           
             (*Allocate memory entity array *)
             let entity_size = StringMap.cardinal comp_ids in
-            let array_size = L.const_int i32_t entity_size in
-            let ent_arr_ptr = L.build_array_malloc void_ptr_t array_size "entity_ptr" builder in
-
-
+            let array_size = L.const_int i64_t entity_size in
+            (* let _ = print_endline ("ent array size is " ^ string_of_int entity_size) in  *)
+            let ent_arr_ptr = L.build_array_malloc void_ptr_t array_size "ent_arr_ptr" builder in
+           
             (*Initialize everything in array to null*)
-            for i = 0 to entity_size do 
-              let null_ptr = L.build_bitcast (L.const_null void_ptr_t) void_ptr_t "void_ptr" builder in
+            for i = 0 to entity_size - 1 do 
+              let null_ptr = L.build_bitcast (L.const_null void_ptr_t) void_ptr_t "null_void_ptr" builder in
               let idx = L.const_int i32_t i in 
-              ignore( L.build_store null_ptr (L.build_gep ent_arr_ptr [| idx |] "element_ptr" builder) builder);
-            done;
+              ignore( L.build_store null_ptr (L.build_gep ent_arr_ptr [| idx |] "ent_element_ptr" builder) builder);
+            done; 
 
             (*Initialize a struct for the current component, and return the struct ptr*)
             let init_comp_struct (c_name, mem_assigns) = 
               try 
               
-              (*allocate struct memory*)
+              (*allocate struct memory for component values*)
               (let struct_ty = StringMap.find c_name struct_types in 
-              (* let _ = print_endline ("got struct type" ^ L.string_of_lltype struct_ty) in *)
-              let _ = L.build_call printf_func [| int_format_str ; L.const_int i64_t entity_size |] "printf" builder in 
-              let malloc_result = L.build_alloca struct_ty "mallocResult" builder in
-              let _ = L.build_call printf_func [| int_format_str ; L.const_int i64_t entity_size |] "printf" builder in 
-              let struct_ptr = L.build_bitcast malloc_result (L.pointer_type struct_ty) "struct_ptr" builder in
-              
+              let struct_ptr = L.build_malloc struct_ty "comp_ptr" builder in
+             
               (*init all struct fields *)
               let init_mem index (_, e) =
                 let field_ptr = L.build_struct_gep struct_ptr index "field_ptr" builder in
@@ -648,7 +638,8 @@ let translate program =
               let struct_ptr = init_comp_struct (cname, mem_assigns) in
               let index = StringMap.find cname comp_ids in
               let element_ptr = L.build_gep ent_arr_ptr [|L.const_int i32_t index|] "entity_ptr" builder in
-              ignore (L.build_store (L.build_bitcast struct_ptr void_ptr_t "struct_void_ptr" builder) element_ptr builder);
+              let struct_void_ptr = L.build_bitcast struct_ptr void_ptr_t "struct_void_ptr" builder in
+              ignore (L.build_store struct_void_ptr element_ptr builder);
             in
 
             (*Add entity to registry*)
@@ -659,12 +650,53 @@ let translate program =
           in builder
         
             (* in builder *)
-        | _ -> raise (Failure "Not implemented")
-      (* Implement for loops as while loops! *)
-      (*| SFor (e1, e2, e3, body) -> stmt builder
-	        ( SBlock [SExpr e1 ; SWhile (e2, SBlock [body ; SExpr e3]) ] ) *)
-    in
+        
+      | SFor (varName, e, body) -> 
+          let range_list = expr builder e in
+          let length, range_arr_ptr = read_list range_list builder in
+          (*Initialize a counter and add it to the body prior to looping*)
+          let counter = L.build_alloca i64_t "counter" builder in
+          let _ = L.build_store (L.const_int i64_t 0) counter builder in
+          (* let counter_val = L.build_load counter "counter_value" builder in *)
+          
+          (*SWHILE CODE COPY PASTED*)
+          (* First create basic block for condition instructions -- this will
+          serve as destination in the case of a loop *)
+	        let pred_bb = L.append_block context "for_predicate" the_function in
+          (* In current block, branch to predicate to execute the condition *)
+	        let _ = L.build_br pred_bb builder in
+          (* Create the body's block, generate the code for it, and add a branch
+          back to the predicate block (we always jump back at the end of a while
+          loop's body, unless we returned or something) *)
+	        let body_bb = L.append_block context "for_body" the_function in
+         (*Assign the iterator to the current element in the list*)
+          let body_builder = L.builder_at_end context body_bb in
+          (* let counter_val = L.build_load counter "counter_value" body_builder in *)
+          let iterator_ptr = lookup varName in
+          let element_ptr = L.build_gep range_arr_ptr [| (L.build_load counter "counter_value" body_builder) |] "element_ptr" body_builder in
+          let element_val = L.build_load element_ptr "element" body_builder in
+          let _ = L.build_store element_val iterator_ptr body_builder in
 
+                let while_builder = stmt (L.builder_at_end context body_bb) body in
+          
+          (* increment counter*)
+          let counter_inc = L.build_add (L.build_load counter "counter_value" while_builder) (L.const_int i64_t 1) "incremented_counter" while_builder in
+          let _ = L.build_store counter_inc counter while_builder in
+          
+	        let () = add_terminal while_builder (L.build_br pred_bb) in
+          
+          (* Generate the predicate code in the predicate block *)
+	        let pred_builder = L.builder_at_end context pred_bb in
+	        let bool_val = L.build_icmp L.Icmp.Slt (L.build_load counter "curr_counter_value" pred_builder) length "is_counter_less_than" pred_builder in
+
+          (* Hook everything up *)
+	        let merge_bb = L.append_block context "merge" the_function in
+	        let _ = L.build_cond_br bool_val body_bb merge_bb pred_builder in
+          (*END OF SWHILE CODE COPY PASTED*)
+  
+	        L.builder_at_end context merge_bb
+          
+    in
     (* Build the code for each statement in the function *)
     let builder = stmt builder (SBlock fdecl.sbody) in
     (* let _ = print_endline "created builder" in *)

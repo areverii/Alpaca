@@ -1,5 +1,11 @@
 (* Semantic checking for the MicroC compiler *)
-
+(*
+Authors: 
+Elliot Bonner
+Phila Dlamini
+Nathan Solomon
+Nicholas Woodward
+*)
 open Ast
 open Sast
 module StringMap = Map.Make(String)
@@ -283,16 +289,6 @@ let check program  =
               List et -> (et, SCall("back", [(argt, sarg)]))
             | _ -> raise (Failure "Got non-list argument to back")
         )
-      | Call("append", args) as call ->
-        if List.length args != 2 then
-          raise (Failure ("expecting 2 arguments in " ^ string_of_expr call))
-        else let args' = List.map expr args in
-          (match args' with
-              [(List et, _); (et', _)] when et = et' -> (List et, SCall("append", args'))
-            | [(t1, _); (t2, _)] -> raise (Failure ("Got invalid arguments to append expected (list, elem) found " 
-                                                    ^ string_of_typ t1 ^ ", " ^ string_of_typ t2))
-            | _ -> raise (Failure "Internal error in append args check")
-        )
       | Call("range", args) as call -> 
         if List.length args != 2 then
           raise (Failure ("expecting 2 arguments in " ^ string_of_expr call))
@@ -490,7 +486,7 @@ let check program  =
                 else raise (Failure ("attempted to assign mismatched type to " ^ name))
                 
               in 
-              (comp, List.fold_left check_assigns [] assigns) :: accum
+              (comp, List.rev (List.fold_left check_assigns [] assigns)) :: accum
             in 
               let comp_assign_list = List.fold_left check_comp_assign [] comp_assigns in
 

@@ -1,5 +1,11 @@
 (* Ocamllex scanner for Alpaca *)
-
+(*
+Authors: 
+Elliot Bonner
+Phila Dlamini
+Nathan Solomon
+Nicholas Woodward
+*)
 { open Parser }
 
 let digit = ['0' - '9']
